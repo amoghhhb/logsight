@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogSight - Forensic Log Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@3/tsparticles.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a192f;
+            color: #c8d6e5;
+            overflow-x: hidden;
+            /* Prevent horizontal scroll */
+        }
+
+        /* tsParticles container for animated background */
+        #tsparticles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            /* Sits behind content */
+        }
+
+        /* Mouse-following glow effect */
+        #glow-orb {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            transition: transform 0.1s ease-out;
+            z-index: 5;
+            /* Above particles, below nav */
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a192f;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background-color: #3b82f6;
+            border-radius: 10px;
+            border: 2px solid #0a192f;
+        }
+
+        /* Sticky nav background blur */
+        .sticky-nav {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            background-color: rgba(10, 25, 47, 0.85);
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            z-index: 50;
+            /* Highest z-index */
+        }
+
+        /* Ensure main content and footer sit above particles */
+        main,
+        footer {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* FIX: Push main content down past the fixed header */
+        main {
+            padding-top: 80px;
+        }
+
+
+        /* Animated text gradient */
+        .animated-gradient {
+            background: linear-gradient(90deg, #facc15, #ffffff, #facc15);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 3s linear infinite;
+        }
+
+        @keyframes shine {
+            to {
+                background-position: 200% center;
+            }
+        }
+
+        /* Slow pulse animation */
+        .animate-pulse-slow {
+            animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+        }
+
+        @keyframes pulse-slow {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.9;
+                transform: scale(1.05);
+            }
+        }
+
+        /* Button hover: stop pulse, add glow */
+        .animate-pulse-slow:hover {
+            animation: none;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px 5px rgba(250, 204, 21, 0.5);
+            background-color: #facc15;
+            /* Brighter yellow on hover */
+        }
+
+        /* Floating animation for logo */
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-15px);
+            }
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        /* Terminal typing caret */
+        .terminal-line span:last-child::after {
+            content: '_';
+            animation: blink 1s step-end infinite;
+            opacity: 1;
+            color: #facc15;
+            margin-left: 2px;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+        }
+
+        /* Active nav link style */
+        .nav-link.active {
+            color: #facc15;
+            font-weight: 600;
+        }
+
+        /* Section title underline animation */
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 0;
+            /* Start at 0 width */
+            height: 3px;
+            background: #facc15;
+            margin: 8px auto 0;
+            /* Centered underline */
+            transition: width 0.5s ease-in-out 0.2s;
+            /* Animate width */
+        }
+
+        /* This class will be added by JS to trigger the animation */
+        .section-title.is-visible::after {
+            width: 80px;
+            /* Animate to 80px */
+        }
+
+        /* Prevent text selection */
+        body.select-none,
+        body .select-none {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        /* Default state for GSAP animations */
+        /* Hide elements that will be animated in */
+        .gsap-hero,
+        .gsap-reveal-card,
+        .gsap-reveal-step,
+        .gsap-reveal-section {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        /* How It Works - Animated Path */
+        #how-it-works-path-animated {
+            /* Path length will be set by JS */
+            stroke-dasharray: 1;
+            stroke-dashoffset: 1;
+            transition: stroke-dashoffset 1s ease-out;
+        }
+
+        /* App Preview - Data Dots */
+        .data-dot {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background-color: #3b82f6;
+            opacity: 0;
+            animation: flow 8s linear infinite;
+        }
+
+        .data-dot:nth-child(1) {
+            top: 10%;
+            left: 0;
+            animation-delay: 0s;
+        }
+
+        .data-dot:nth-child(2) {
+            top: 30%;
+            left: 0;
+            animation-delay: 1s;
+        }
+
+        .data-dot:nth-child(3) {
+            top: 50%;
+            left: 0;
+            animation-delay: 2.5s;
+        }
+
+        .data-dot:nth-child(4) {
+            top: 70%;
+            left: 0;
+            animation-delay: 4s;
+        }
+
+        .data-dot:nth-child(5) {
+            top: 90%;
+            left: 0;
+            animation-delay: 5.5s;
+        }
+
+        .data-dot:nth-child(6) {
+            top: 20%;
+            right: 0;
+            animation-delay: 0.5s;
+            animation-name: flow-right;
+        }
+
+        .data-dot:nth-child(7) {
+            top: 40%;
+            right: 0;
+            animation-delay: 1.5s;
+            animation-name: flow-right;
+        }
+
+        .data-dot:nth-child(8) {
+            top: 60%;
+            right: 0;
+            animation-delay: 3s;
+            animation-name: flow-right;
+        }
+
+        .data-dot:nth-child(9) {
+            top: 80%;
+            right: 0;
+            animation-delay: 4.5s;
+            animation-name: flow-right;
+        }
+
+        @keyframes flow {
+            0% {
+                transform: translateX(0);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            80% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateX(calc(50vw - 2px));
+                opacity: 0;
+            }
+        }
+
+        @keyframes flow-right {
+            0% {
+                transform: translateX(0);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            80% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateX(calc(-50vw + 2px));
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-brand-navy text-gray-300 select-none" style="background-color: #0a192f;">
+    <div id="tsparticles"></div>
+
+    <div id="glow-orb"></div>
+
+    <header id="main-header"
+        class="top-0 left-0 right-0 z-50 transition-all duration-300 py-4 select-none sticky-nav">
+        <nav class="container mx-auto px-6 flex justify-between items-center">
+            <a href="#" class="flex items-center gap-2 group">
+                <img src="LogSight.jpg" alt="LogSight Logo"
+                    class="w-10 h-10 rounded-full transition-all duration-300 group-hover:scale-110">
+                <span class="text-white text-xl font-bold group-hover:text-brand-yellow transition-colors">LogSight</span>
+            </a>
+
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="ai.html"
+                    class="nav-link text-gray-300 hover:text-brand-yellow transition-colors duration-200">AI
+                    Summarizer</a>
+                <a href="#features"
+                    class="nav-link text-gray-300 hover:text-brand-yellow transition-colors duration-200">Features</a>
+                <a href="#how-it-works"
+                    class="nav-link text-gray-300 hover:text-brand-yellow transition-colors duration-200">How It
+                    Works</a>
+                <a href="#app-preview"
+                    class="nav-link text-gray-300 hover:text-brand-yellow transition-colors duration-200">App
+                    Preview</a>
+                <a href="#about"
+                    class="nav-link text-gray-300 hover:text-brand-yellow transition-colors duration-200">About</a>
+                <a href="#contact"
+                    class="nav-link text-gray-300 hover:text-brand-yellow transition-colors duration-200 font-medium text-brand-yellow hover:text-yellow-300">Contact</a>
+            </div>
+
+            <a href="#cta"
+                class="hidden md:block bg-brand-yellow text-brand-navy font-bold py-2 px-5 rounded-lg shadow-lg hover:bg-yellow-300 animate-pulse-slow">
+                Download
+            </a>
+        </nav>
+    </header>
+
+    <main>
+
+        <section class="min-h-screen flex items-center justify-center relative pt-40 md:pt-20 pb-20 overflow-hidden">
+            <div class="absolute inset-0 z-0 opacity-10"
+                style="background-image: radial-gradient(circle at center, rgba(59, 130, 246, 0.3) 1px, transparent 1px), radial-gradient(circle at center, rgba(59, 130, 246, 0.2) 1px, transparent 1px); background-size: 40px 40px;">
+            </div>
+
+            <div class="container mx-auto flex flex-col items-center justify-center gap-8 text-center relative z-10">
+
+                <div class="flex flex-col items-center pt-24">
+                    <h1 class="gsap-hero text-5xl md:text-7xl font-extrabold text-white">
+                        <span class="text-brand-yellow">LogSight:</span> A New Eye
+                    </h1>
+                    <h1 class="gsap-hero text-5xl md:text-7xl font-extrabold text-white mt-2">
+                        for Forensic Data.
+                    </h1>
+                    <p class="gsap-hero text-lg md:text-xl text-gray-400 max-w-2xl mt-6">
+                        A powerful, secure desktop tool for Forensic Experts, accessible to all.
+                        Scan, analyze, and monitor log files with unparalleled precision, right on your machine.
+                    </p>
+                    <a href="#cta"
+                        class="gsap-hero bg-brand-yellow text-brand-navy font-bold py-4 px-10 rounded-lg shadow-lg hover:bg-yellow-300 text-lg mt-10 animate-pulse-slow">
+                        Download Now (v1.30)
+                    </a>
+                </div>
+
+            </div>
+        </section>
+
+        <div class="h-1 bg-gradient-to-r from-transparent via-brand-blue to-transparent opacity-30"></div>
+
+        <section id="features" class="py-24 bg-brand-navy relative z-10 overflow-hidden">
+            <div class="container mx-auto px-6">
+                <h2 class="section-title text-4xl font-extrabold text-white text-center mb-16 mx-auto">
+                    Powerful Features, Total Control
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div
+                        class="gsap-reveal-card bg-gray-800 bg-opacity-50 p-6 rounded-xl shadow-lg border border-gray-700 transition-all duration-300 hover:border-brand-yellow hover:scale-[1.03]">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="w-12 h-12 text-brand-yellow mb-4">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                        </svg>
+                        <h3 class="text-2xl font-bold text-white mb-2">Deep System Scan</h3>
+                        <p class="text-gray-400">Scan specific directories or the entire filesystem with Admin Mode to
+                            find all relevant logs.</p>
+                    </div>
+
+                    <div
+                        class="gsap-reveal-card bg-gray-800 bg-opacity-50 p-6 rounded-xl shadow-lg border border-gray-700 transition-all duration-300 hover:border-brand-yellow hover:scale-[1.03]">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="w-12 h-12 text-brand-yellow mb-4">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-1.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25A2.25 2.25 0 015.25 3h13.5A2.25 2.25 0 0121 5.25z" />
+                        </svg>
+                        <h3 class="text-2xl font-bold text-white mb-2">Real-time Monitor</h3>
+                        <p class="text-gray-400">Watch log files as they're written. See new entries appear instantly with
+                            live syntax highlighting.</p>
+                    </div>
+
+                    <div
+                        class="gsap-reveal-card bg-gray-800 bg-opacity-50 p-6 rounded-xl shadow-lg border border-gray-700 transition-all duration-300 hover:border-brand-yellow hover:scale-[1.03]">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="w-12 h-12 text-brand-yellow mb-4">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z" />
+                        </svg>
+                        <h3 class="text-2xl font-bold text-white mb-2">Secure Encryption</h3>
+                        <p class="text-gray-400">All analysis reports are encrypted locally with a secure key before
+                            being saved or sent.</p>
+                    </div>
+
+                    <div
+                        class="gsap-reveal-card bg-gray-800 bg-opacity-50 p-6 rounded-xl shadow-lg border border-gray-700 transition-all duration-300 hover:border-brand-yellow hover:scale-[1.03]">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="w-12 h-12 text-brand-yellow mb-4">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.108 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.11v1.093c0 .55-.397 1.02-.94 1.11l-.893.149c-.425.07-.765.383-.93.78-.165.398-.143.854.108 1.204l.527.738c.32.447.27.96-.12 1.45l-.774.773a1.125 1.125 0 01-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.108-.397.165-.71.505-.78.93l-.15.893c-.09.543-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.149-.894c-.07-.424-.384-.764-.78-.93-.398.164-.855-.142-1.205.108l-.737.527a1.125 1.125 0 01-1.45-.12l-.773-.774a1.125 1.125 0 01-.12-1.45l.527-.737c.25-.35.273-.806-.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.11v-1.094c0 .55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.527-.738a1.125 1.125 0 01.12-1.45l.773-.773a1.125 1.125 0 011.45-.12l.737.527c.35.25.806.272 1.204.108.397-.165.71-.505.78-.93l.15-.893z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <h3 class="text-2xl font-bold text-white mb-2">Custom Patterns</h3>
+                        <p class="text-gray-400">Define your own threat patterns using a simple `.txt` file. The app
+                            detects and highlights your custom regex.</p>
+                    </div>
+
+                    <div
+                        class="gsap-reveal-card bg-gray-800 bg-opacity-50 p-6 rounded-xl shadow-lg border border-gray-700 transition-all duration-300 hover:border-brand-yellow hover:scale-[1.03]">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="w-12 h-12 text-brand-yellow mb-4">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <h3 class="text-2xl font-bold text-white mb-2">Time-Range Filter</h3>
+                        <p class="text-gray-400">Narrow your analysis to a specific timeframe. Only analyze log entries
+                            created between your chosen dates and times.</p>
+                    </div>
+
+                    <div
+                        class="gsap-reveal-card bg-gray-800 bg-opacity-50 p-6 rounded-xl shadow-lg border border-gray-700 transition-all duration-300 hover:border-brand-yellow hover:scale-[1.03]">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="w-12 h-12 text-brand-yellow mb-4">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h12A2.25 2.25 0 0120.25 6v3.776" />
+                        </svg>
+                        <h3 class="text-2xl font-bold text-white mb-2">Secure Backup</h3>
+                        <p class="text-gray-400">Create a `.zip` archive of all discovered log files with a single click,
+                            securing your evidence.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="h-1 bg-gradient-to-r from-transparent via-brand-blue to-transparent opacity-30"></div>
+
+        <section id="how-it-works" class="py-24 bg-brand-navy relative z-10 overflow-hidden">
+            <div class="container mx-auto px-6">
+                <h2 class="section-title text-4xl font-extrabold text-white text-center mb-16 md:mb-24 mx-auto">
+                    Simple 4-Step Process
+                </h2>
+                <div class="relative max-w-2xl mx-auto hidden md:block" style="min-height: 700px;">
+                    <svg class="absolute left-1/2 -translate-x-1/2 h-full" width="4" preserveAspectRatio="none"
+                        viewBox="0 0 4 700" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path id="how-it-works-path" d="M 2 0 V 700" stroke="#3b82f6" stroke-width="4"
+                            stroke-opacity="0.3" />
+                        <path id="how-it-works-path-animated" d="M 2 0 V 700" stroke="#facc15" stroke-width="4" />
+                    </svg>
+
+                    <div class="relative z-10 space-y-16 md:space-y-24">
+                        <div class="gsap-reveal-step md:w-1/2 md:pr-16" style="padding-top: 20px;">
+                            <div class="flex items-center">
+                                <div
+                                    class="z-10 w-20 h-20 bg-brand-yellow text-brand-navy rounded-full flex items-center justify-center text-3xl font-bold mr-8 flex-shrink-0 border-4 border-brand-navy">
+                                    01</div>
+                                <div>
+                                    <h3 class="text-3xl font-bold mb-2 text-white">Select Directory</h3>
+                                    <p class="text-gray-300 text-lg">Choose a directory on your device to scan for log
+                                        files.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="gsap-reveal-step md:w-1/2 md:ml-auto md:pl-16" style="padding-top: 20px;">
+                            <div class="flex items-center flex-row-reverse text-right">
+                                <div
+                                    class="z-10 w-20 h-20 bg-brand-yellow text-brand-navy rounded-full flex items-center justify-center text-3xl font-bold ml-8 flex-shrink-0 border-4 border-brand-navy">
+                                    02</div>
+                                <div>
+                                    <h3 class="text-3xl font-bold mb-2 text-white">Scan & Analyze</h3>
+                                    <p class="text-gray-300 text-lg">LogSight scans the directory and analyzes logs
+                                        against
+                                        built-in patterns.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="gsap-reveal-step md:w-1/2 md:pr-16" style="padding-top: 20px;">
+                            <div class="flex items-center">
+                                <div
+                                    class="z-10 w-20 h-20 bg-brand-yellow text-brand-navy rounded-full flex items-center justify-center text-3xl font-bold mr-8 flex-shrink-0 border-4 border-brand-navy">
+                                    03</div>
+                                <div>
+                                    <h3 class="text-3xl font-bold mb-2 text-white">Generate Report</h3>
+                                    <p class="text-gray-300 text-lg">Get a detailed text report with findings and
+                                        detected
+                                        threats.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="gsap-reveal-step md:w-1/2 md:ml-auto md:pl-16" style="padding-top: 20px;">
+                            <div class="flex items-center flex-row-reverse text-right">
+                                <div
+                                    class="z-10 w-20 h-20 bg-brand-yellow text-brand-navy rounded-full flex items-center justify-center text-3xl font-bold ml-8 flex-shrink-0 border-4 border-brand-navy">
+                                    04</div>
+                                <div>
+                                    <h3 class="text-3xl font-bold mb-2 text-white">Save Locally</h3>
+                                    <p class="text-gray-300 text-lg">Download your report as a text file saved directly
+                                        to
+                                        your device.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-12 md:hidden">
+                    <div class="flex flex-col items-center text-center gsap-reveal-step">
+                        <div
+                            class="w-16 h-16 bg-brand-yellow text-brand-navy rounded-full flex items-center justify-center text-2xl font-bold mb-4">
+                            01</div>
+                        <h3 class="text-2xl font-bold mb-2 text-white">Select Directory</h3>
+                        <p class="text-gray-300">Choose a directory on your device to scan for log files.</p>
+                    </div>
+                    <div class="flex flex-col items-center text-center gsap-reveal-step">
+                        <div
+                            class="w-16 h-16 bg-brand-yellow text-brand-navy rounded-full flex items-center justify-center text-2xl font-bold mb-4">
+                            02</div>
+                        <h3 class="text-2xl font-bold mb-2 text-white">Scan & Analyze</h3>
+                        <p class="text-gray-300">LogSight scans the directory and analyzes logs against built-in
+                            patterns.</p>
+                    </div>
+                    <div class="flex flex-col items-center text-center gsap-reveal-step">
+                        <div
+                            class="w-16 h-16 bg-brand-yellow text-brand-navy rounded-full flex items-center justify-center text-2xl font-bold mb-4">
+                            03</div>
+                        <h3 class="text-2xl font-bold mb-2 text-white">Generate Report</h3>
+                        <p class="text-gray-300">Get a detailed text report with findings and detected threats.</p>
+                    </div>
+                    <div class="flex flex-col items-center text-center gsap-reveal-step">
+                        <div
+                            class="w-16 h-16 bg-brand-yellow text-brand-navy rounded-full flex items-center justify-center text-2xl font-bold mb-4">
+                            04</div>
+                        <h3 class="text-2xl font-bold mb-2 text-white">Save Locally</h3>
+                        <p class="text-gray-300">Download your report as a text file saved directly to your device.</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+
+        <div class="h-1 bg-gradient-to-r from-transparent via-brand-blue to-transparent opacity-30"></div>
+
+        <section id="app-preview" class="py-24 bg-brand-navy relative z-10 overflow-hidden">
+            <div class="container mx-auto px-6 gsap-reveal-section relative">
+                <h2 class="section-title text-4xl font-extrabold text-white text-center mb-16 mx-auto">
+                    See It in Action
+                </h2>
+
+                <div class="absolute inset-0 z-0 overflow-hidden rounded-xl" aria-hidden="true">
+                    <div class="data-dot"></div>
+                    <div class="data-dot"></div>
+                    <div class="data-dot"></div>
+                    <div class="data-dot"></div>
+                    <div class="data-dot"></div>
+                    <div class="data-dot"></div>
+                    <div class="data-dot"></div>
+                    <div class="data-dot"></div>
+                    <div class="data-dot"></div>
+                    <div class="data-dot"></div>
+                </div>
+
+                <div
+                    class="relative z-10 max-w-4xl mx-auto bg-gray-900 rounded-xl shadow-2xl border border-gray-700 overflow-hidden">
+                    <div class="h-10 bg-gray-800 flex items-center px-4">
+                        <div class="flex space-x-2">
+                            <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                            <div class="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                            <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                        </div>
+                        <div class="text-gray-400 text-sm mx-auto font-medium">LogSight v1.30</div>
+                    </div>
+                    <div class="flex">
+                        <div class="w-1/4 bg-gray-800 bg-opacity-75 p-4 border-r border-gray-700">
+                            <h3 class="text-white font-bold mb-4">Controls</h3>
+                            <div class="space-y-2">
+                                <div id="btn-scanner"
+                                    class="w-full text-left py-2 px-3 rounded-md font-medium text-sm cursor-pointer bg-brand-blue text-white">
+                                    Scanner
+                                </div>
+                                <div id="btn-monitor"
+                                    class="w-full text-left py-2 px-3 rounded-md font-medium text-sm cursor-pointer text-gray-300 hover:bg-gray-700">
+                                    Monitor
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-3/4 bg-gray-900 p-4">
+                            <h4 class="text-gray-400 text-sm font-medium mb-2">Status Log:</h4>
+                            <div id="terminal-output"
+                                class="w-full h-64 bg-black rounded-lg p-4 font-mono text-sm text-green-400 overflow-y-auto">
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="h-1 bg-gradient-to-r from-transparent via-brand-blue to-transparent opacity-30"></div>
+
+        <section id="cta" class="py-24 bg-gray-900 bg-opacity-50 relative z-10">
+            <div class="container mx-auto px-6 text-center gsap-reveal-section">
+                <h2 class="text-4xl font-extrabold text-white mb-6">
+                    Ready to Take Control of Your Logs?
+                </h2>
+                <p class="text-xl text-gray-400 max-w-2xl mx-auto mb-10">
+                    Download the latest version of LogSight for your desktop.
+                    Secure, offline-first analysis is just one click away.
+                </p>
+                <a href="#"
+                    class="bg-brand-yellow text-brand-navy font-bold py-4 px-12 rounded-lg shadow-lg hover:bg-yellow-300 text-xl animate-pulse-slow">
+                    Download Now (v1.30)
+                </a>
+            </div>
+        </section>
+
+        <div class="h-1 bg-gradient-to-r from-transparent via-brand-blue to-transparent opacity-30"></div>
+
+        <section id="about" class="py-24 bg-brand-navy relative z-10 overflow-hidden">
+            <div class="container mx-auto px-6 max-w-3xl text-center gsap-reveal-section">
+                <h2 class="section-title text-4xl font-extrabold text-white text-center mb-8 mx-auto">
+                    About Us
+                </h2>
+                <div class="flex flex-col items-center">
+                    <p class="text-lg text-gray-300 leading-relaxed select-none">
+                        LogSight was created by <strong class="text-brand-yellow">Samyak Wadwinde</strong> and <strong
+                            class="text-brand-yellow">Amogh Bandre</strong>, two passionate Cybersecurity and Forensics
+                        students from B.K. Birla College, Kalyan.
+                        <br><br>
+                        Our mission is to build powerful, accessible, and secure tools for digital forensic
+                        investigators and IT professionals, enabling them to uncover critical insights from complex data.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <div class="h-1 bg-gradient-to-r from-transparent via-brand-blue to-transparent opacity-30"></div>
+
+        <section id="contact" class="py-24 bg-brand-navy relative z-10 overflow-hidden">
+            <div class="container mx-auto px-6 max-w-2xl gsap-reveal-section">
+                <h2 class="section-title text-4xl font-extrabold text-white text-center mb-12 mx-auto">
+                    Get in Touch
+                </h2>
+                <form id="contact-form" class="space-y-6">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-300 mb-2">Full Name</label>
+                        <input type="text" name="full_name" id="name" required
+                            class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent"
+                            placeholder="Your Name">
+                    </div>
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
+                        <input type="email" name="email_address" id="email" required
+                            class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent"
+                            placeholder="you@example.com">
+                    </div>
+                    <div>
+                        <label for="message" class="block text-sm font-medium text-gray-300 mb-2">Message</label>
+                        <textarea id="message" name="user_message" rows="5" required
+                            class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent resize-none"
+                            placeholder="Your message..."></textarea>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit"
+                            class="bg-brand-yellow text-brand-navy font-bold py-3 px-10 rounded-lg shadow-lg hover:bg-yellow-300 animate-pulse-slow">
+                            Send Message
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+
+    </main>
+
+    <footer class="py-16 bg-brand-navy border-t border-gray-800 relative z-10">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center text-center md:text-left">
+                <div class="mb-8 md:mb-0">
+                    <a href="#" class="flex items-center justify-center md:justify-start gap-2 mb-4">
+                        <img src="LogSight.jpg" alt="LogSight Logo" class="w-10 h-10 rounded-full">
+                        <span class="text-white text-xl font-bold">LogSight</span>
+                    </a>
+                    <p class="text-gray-500">&copy; 2024 LogSight. All rights reserved.</p>
+                    <p class="text-gray-500 text-sm mt-1">Created by Samyak Wadwinde & Amogh Bandre</p>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-8 md:gap-12">
+                    <div>
+                        <h5 class="font-semibold text-gray-300 mb-3">Navigate</h5>
+                        <ul class="space-y-2">
+                            <li><a href="ai_summarizer.html"
+                                    class="text-gray-400 hover:text-brand-yellow transition-colors">AI Summarizer</a>
+                            </li>
+                            <li><a href="#about" class="text-gray-400 hover:text-brand-yellow transition-colors">About
+                                    Us</a></li>
+                            <li><a href="#contact"
+                                    class="text-gray-400 hover:text-brand-yellow transition-colors">Contact</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h5 class="font-semibold text-gray-300 mb-3">Legal</h5>
+                        <ul class="space-y-2">
+                            <li><a href="#" class="text-gray-400 hover:text-brand-yellow transition-colors">Privacy
+                                    Policy</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-brand-yellow transition-colors">Terms of
+                                    Service</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+
+    <script>
+        // Set Tailwind config
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brand-navy': '#0a192f', // Dark background
+                        'brand-blue': '#3b82f6', // Accent blue
+                        'brand-yellow': '#facc15', // Accent yellow
+                        // Added gray from terminal logs
+                        'brand-gray-light': '#cbd5e1', // slate-300
+                    },
+                }
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // =======================================================================
+            // 🔑 SUPABASE INITIALIZATION - CONFLICT FIX APPLIED 🔑
+            // =======================================================================
+            // Project URL derived from JWT payload: ewisząsbcohubeogocmy
+            const SUPABASE_URL = 'https://ewiszqsbcohubeogocmy.supabase.co';
+            // Anon Public Key confirmed by user
+            const SUPABASE_ANON_KEY = 'sb_publishable_CP1T-2gM6gOzcq6Owatx1w_sThP4ZQZ'; 
+
+            let supabase = null;
+
+            // FIX: Use window.supabase (lowercase) to correctly access the loaded library 
+            // and wrap it in a null check for robustness.
+            if (window.supabase) {
+                try {
+                    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                } catch (e) {
+                    console.error("Error creating Supabase client:", e);
+                }
+            }
+            // =======================================================================
+            
+            const glowOrb = document.getElementById('glow-orb');
+            const terminalOutput = document.getElementById('terminal-output');
+            const btnScanner = document.getElementById('btn-scanner');
+            const btnMonitor = document.getElementById('btn-monitor');
+            const contactForm = document.getElementById('contact-form');
+
+            // --- Mouse-following glow ---
+            document.addEventListener('mousemove', (e) => {
+                if (glowOrb) {
+                    glowOrb.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
+                }
+            });
+
+            // --- Contact Form Submission Logic (Supabase) ---
+            if (contactForm) {
+                contactForm.addEventListener('submit', handleContactFormSubmission);
+            }
+
+            async function handleContactFormSubmission(event) {
+                event.preventDefault(); 
+                
+                // FIX: Check if the client was successfully initialized
+                if (!supabase) {
+                    alert('Supabase client not initialized. Please check the browser console for specific errors, or try a hard refresh (Ctrl+Shift+R).');
+                    return;
+                }
+
+                const submitButton = contactForm.querySelector('button[type="submit"]');
+                const originalText = submitButton.textContent;
+                
+                submitButton.disabled = true;
+                submitButton.textContent = 'Sending...';
+                submitButton.classList.remove('animate-pulse-slow'); // Stop pulsing while sending
+
+                const formData = new FormData(contactForm);
+                
+                // Create object mapping form field names to Supabase column names
+                const formObject = {
+                    full_name: formData.get('full_name'),
+                    email_address: formData.get('email_address'),
+                    user_message: formData.get('user_message'),
+                };
+                
+                // IMPORTANT: Ensure 'contact_submissions' matches the table name in your Supabase database
+                const { error } = await supabase
+                    .from('contact_submissions') 
+                    .insert([formObject]);
+
+                if (error) {
+                    console.error('Supabase Error:', error);
+                    // Provide a more detailed error message
+                    alert(`Error submitting form. Ensure RLS is enabled for 'anon' role on the 'contact_submissions' table.`);
+                } else {
+                    alert('Success! Your message has been sent to LogSight.');
+                    contactForm.reset(); 
+                }
+
+                // Reset button state
+                submitButton.disabled = false;
+                submitButton.textContent = originalText;
+                submitButton.classList.add('animate-pulse-slow');
+            }
+            // --- End Contact Form Logic ---
+
+
+            // --- Animated Terminal Logic ---
+            const scannerLines = [
+                { prefix: '[INFO] ', text: 'Starting LogSight v1.30...', color: 'text-brand-gray-light' },
+                { prefix: '[INFO] ', text: 'Scan mode initiated. Target: C:\\Windows\\Logs', color: 'text-brand-gray-light' },
+                { prefix: '[SCAN] ', text: 'Scanning C:\\Windows\\Logs\\CBS\\...', color: 'text-blue-400' },
+                { prefix: '[FOUND] ', text: 'Found 12 matching files.', color: 'text-green-400' },
+                { prefix: '[INFO] ', text: 'Analyzing files... (0/12)', color: 'text-brand-gray-light' },
+                { prefix: '[WARN] ', text: 'Possible privilege escalation attempt in Security.log (L:1204)', color: 'text-yellow-400' },
+                { prefix: '[ERROR] ', text: 'FATAL: Unhandled exception 0xC0000005 in system.log (L:889)', color: 'text-red-500' },
+                { prefix: '[INFO] ', text: 'Analysis complete. 1 FATAL, 3 WARN.', color: 'text-brand-gray-light' },
+                { prefix: '[INFO] ', text: 'Generating encrypted report...', color: 'text-brand-gray-light' },
+                { prefix: '[DONE] ', text: 'Report saved to C:\\Reports\\log_analysis_20241030.html.enc', color: 'text-green-400' }
+            ];
+
+            const monitorLines = [
+                { prefix: '[INFO] ', text: 'Starting LogSight v1.30...', color: 'text-brand-gray-light' },
+                { prefix: '[INFO] ', text: 'Monitor mode initiated. Target: C:\\inetpub\\logs\\...', color: 'text-brand-gray-light' },
+                { prefix: '[LIVE] ', text: 'Tailing log file... Press Stop to end.', color: 'text-green-400' },
+                { prefix: '[HTTP] ', text: 'GET /login.php - 200 - 192.168.1.10', color: 'text-gray-300' },
+                { prefix: '[HTTP] ', text: 'POST /login.php - 401 - 10.0.0.5 [FAILED_LOGIN]', color: 'text-yellow-400' },
+                { prefix: '[HTTP] ', text: 'POST /login.php - 401 - 10.0.0.5 [FAILED_LOGIN]', color: 'text-yellow-400' },
+                { prefix: '[HTTP] ', text: 'POST /login.php - 401 - 10.0.0.5 [FAILED_LOGIN]', color: 'text-yellow-400' },
+                { prefix: '[ALERT] ', text: 'Potential brute-force from 10.0.0.5 detected!', color: 'text-red-500' }
+            ];
+
+            let currentLines = scannerLines;
+            let typeCharInterval = null;
+            let nextLineTimeout = null;
+            let currentLineIndex = 0;
+
+            function typeLine() {
+                if (!terminalOutput || currentLineIndex >= currentLines.length) {
+                    return; // All lines typed
+                }
+
+                const lineObject = currentLines[currentLineIndex];
+                const lineText = lineObject.prefix + lineObject.text;
+                const currentLineElement = document.createElement('div');
+                currentLineElement.className = 'terminal-line';
+
+                if (lineObject.color) {
+                    currentLineElement.classList.add(...lineObject.color.split(' '));
+                }
+                if (lineObject.color.includes('red') || lineObject.color.includes('yellow')) {
+                    currentLineElement.style.fontWeight = 'bold';
+                }
+
+                terminalOutput.appendChild(currentLineElement);
+
+                const spanElement = document.createElement('span');
+                currentLineElement.appendChild(spanElement);
+
+                let charIndex = 0;
+                typeCharInterval = setInterval(() => {
+                    if (charIndex >= lineText.length) {
+                        clearInterval(typeCharInterval);
+                        typeCharInterval = null;
+                        currentLineIndex++;
+                        if (terminalOutput) {
+                            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+                        }
+                        // Set timeout for next line
+                        nextLineTimeout = setTimeout(typeLine, 150); // Delay between lines
+                    } else {
+                        spanElement.textContent += lineText[charIndex];
+                        charIndex++;
+                    }
+                }, 25);
+            }
+
+            function startTyping() {
+                // Clear all timers
+                if (typeCharInterval) {
+                    clearInterval(typeCharInterval);
+                    typeCharInterval = null;
+                }
+                if (nextLineTimeout) {
+                    clearTimeout(nextLineTimeout); // Clear pending next line
+                    nextLineTimeout = null;
+                }
+
+                currentLineIndex = 0;
+                if (terminalOutput) {
+                    terminalOutput.innerHTML = '';
+                }
+
+                typeLine(); // Start typing the first line
+            }
+
+            if (btnScanner && btnMonitor) {
+                btnScanner.addEventListener('click', () => {
+                    currentLines = scannerLines;
+                    startTyping();
+                    btnScanner.classList.add('bg-brand-blue', 'text-white');
+                    btnMonitor.classList.remove('bg-brand-blue', 'text-white');
+                    btnMonitor.classList.add('text-gray-300', 'hover:bg-gray-700');
+                });
+
+                btnMonitor.addEventListener('click', () => {
+                    currentLines = monitorLines;
+                    startTyping();
+                    btnMonitor.classList.add('bg-brand-blue', 'text-white');
+                    btnScanner.classList.remove('bg-brand-blue', 'text-white');
+                    btnScanner.classList.add('text-gray-300', 'hover:bg-gray-700');
+                });
+            }
+
+            if (terminalOutput) {
+                startTyping();
+            }
+
+            // --- tsParticles Initialization (Star Field) ---
+            (async () => {
+                try {
+                    await tsParticles.load({
+                        id: "tsparticles",
+                        options: {
+                            background: {
+                                color: {
+                                    value: "#0a192f"
+                                }
+                            },
+                            fpsLimit: 60,
+                            interactivity: {
+                                events: {
+                                    onHover: {
+                                        enable: true,
+                                        mode: "repulse" // Move away from mouse
+                                    }
+                                },
+                                modes: {
+                                    repulse: {
+                                        distance: 100, // Area of effect
+                                        duration: 0.4
+                                    }
+                                }
+                            },
+                            particles: {
+                                color: {
+                                    value: "#ffffff" // White stars
+                                },
+                                links: { // Disable links
+                                    enable: false
+                                },
+                                move: {
+                                    direction: "top", // Move upwards
+                                    enable: true,
+                                    outModes: {
+                                        default: "out" // Leave screen at top
+                                    },
+                                    random: false,
+                                    speed: 0.3, // Very slow drift
+                                    straight: true
+                                },
+                                number: {
+                                    density: {
+                                        enable: true,
+                                        area: 800
+                                    },
+                                    value: 150 // More stars
+                                },
+                                opacity: {
+                                    value: { min: 0.3, max: 0.8 }, // Twinkling effect
+                                    animation: {
+                                        enable: true,
+                                        speed: 1,
+                                        sync: false
+                                    }
+                                },
+                                shape: {
+                                    type: "circle"
+                                },
+                                size: {
+                                    value: { min: 0.5, max: 2 } // Small stars
+                                }
+                            },
+                            detectRetina: true
+                        }
+                    });
+                } catch (error) {
+                    console.error("Error loading tsParticles:", error);
+                }
+            })();
+
+            // --- GSAP Animations ---
+            gsap.registerPlugin(ScrollTrigger);
+
+            // 1. Hero Section Animation (on load)
+            const heroTl = gsap.timeline({ defaults: { duration: 0.8, ease: 'power3.out' } });
+            heroTl.to(".gsap-hero", {
+                opacity: 1,
+                y: 0,
+                stagger: 0.2,
+                delay: 0.2
+            });
+
+            // 2. Section Title Underline Animation
+            const titles = gsap.utils.toArray('.section-title');
+            titles.forEach(title => {
+                ScrollTrigger.create({
+                    trigger: title,
+                    start: "top 85%",
+                    onEnter: () => title.classList.add('is-visible')
+                });
+            });
+
+            // 3. Staggered Card Animation (Features)
+            gsap.to(".gsap-reveal-card", {
+                opacity: 1,
+                y: 0,
+                stagger: 0.15,
+                duration: 0.6,
+                ease: 'power3.out',
+                scrollTrigger: {
+                    trigger: "#features .grid",
+                    start: "top 80%"
+                }
+            });
+
+            // 4. "How It Works" Animated Path
+            const howItWorksPath = document.getElementById("how-it-works-path-animated");
+            if (howItWorksPath) {
+                // Set path length dynamically
+                const pathLength = howItWorksPath.getTotalLength();
+                howItWorksPath.style.strokeDasharray = pathLength;
+                howItWorksPath.style.strokeDashoffset = pathLength;
+
+                gsap.to(howItWorksPath, {
+                    strokeDashoffset: 0,
+                    duration: 3,
+                    ease: "power1.inOut",
+                    scrollTrigger: {
+                        trigger: "#how-it-works",
+                        start: "top 60%", // Start animation sooner
+                        end: "bottom 80%", // End animation sooner
+                        scrub: 1.5
+                    }
+                });
+            }
+
+            // 5. Staggered Step Animations (How It Works)
+            gsap.to(".gsap-reveal-step", {
+                opacity: 1,
+                y: 0,
+                stagger: 0.4,
+                duration: 0.8,
+                ease: 'power3.out',
+                scrollTrigger: {
+                    trigger: "#how-it-works .container", // Target the container
+                    start: "top 75%"
+                }
+            });
+
+            // 6. Other Section Reveals
+            const sectionsToReveal = gsap.utils.toArray('.gsap-reveal-section');
+            sectionsToReveal.forEach(section => {
+                gsap.to(section, {
+                    opacity: 1,
+                    y: 0,
+                    duration: 0.8,
+                    ease: 'power3.out',
+                    scrollTrigger: {
+                        trigger: section,
+                        start: "top 80%"
+                    }
+                });
+            });
+
+            // 7. Active Nav Link Highlighting (GSAP version)
+            const sections = gsap.utils.toArray('section[id]');
+            const navLinks = gsap.utils.toArray('.nav-link[href^="#"]');
+
+            sections.forEach(section => {
+                ScrollTrigger.create({
+                    trigger: section,
+                    start: "top center",
+                    end: "bottom center",
+                    onToggle: self => {
+                        const id = section.getAttribute('id');
+                        const correspondingLink = document.querySelector(`.nav-link[href="#${id}"]`);
+                        if (self.isActive) {
+                            navLinks.forEach(link => link.classList.remove('active'));
+                            if (correspondingLink) {
+                                correspondingLink.classList.add('active');
+                            }
+                        }
+                    }
+                });
+            });
+
+        }); // End DOMContentLoaded
+    </script>
+</body>
+
+</html>
