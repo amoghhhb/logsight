@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/ai",
+      "destination": "/ai.html"
+    },
+    {
+      "source": "/index",
+      "destination": "/index.html"
+    }
+  ]
+}
