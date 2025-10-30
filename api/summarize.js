@@ -25,7 +25,7 @@ export default async function handler(request, response) {
     const openRouterPayload = {
         // Using a highly capable and currently free OpenRouter model.
         // NOTE: This assumes 'Enable free endpoints that may publish prompts' is ON in OpenRouter settings.
-        model: "deepseek/deepseek-r1:free", 
+        model: "meta-llama/llama-3-8b-instruct:free", 
         messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userQuery }
