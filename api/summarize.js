@@ -13,9 +13,6 @@ export default async function handler(request, response) {
     // 3. SECURELY retrieve the API key from Vercel's Environment Variables
     const apiKey = process.env.OPENROUTER_API_KEY; 
     
-    // NOTE: If you are still using the old key name, change it here:
-    // const apiKey = process.env.DEEPSEEK_API_KEY; 
-    
     if (!apiKey) {
         console.error("OPENROUTER_API_KEY environment variable is not set.");
         return response.status(500).send('Server configuration error: AI service key missing.');
@@ -24,13 +21,13 @@ export default async function handler(request, response) {
     // 4. Prepare the payload for OpenRouter
     const openRouterPayload = {
         // Using a highly capable and currently free OpenRouter model.
-        // NOTE: This assumes 'Enable free endpoints that may publish prompts' is ON in OpenRouter settings.
-        model: "meta-llama/llama-3-8b-instruct:free", 
+        // NOTE: This slug requires that 'ZDR Endpoints Only' is OFF in OpenRouter settings.
+        model: "deepseek/deepseek-r1:free", 
         messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userQuery }
         ],
-        // Optional: OpenRouter headers for site attribution (recommended)
+        // Recommended OpenRouter headers for site attribution
         extra_headers: {
             "HTTP-Referer": "https://logsight.vercel.app", // Replace with your site URL
             "X-Title": "LogSight AI Summarizer"
@@ -52,8 +49,10 @@ export default async function handler(request, response) {
         if (!openRouterResponse.ok) {
             const errorBody = await openRouterResponse.json();
             console.error("OpenRouter API Error:", errorBody);
-            // Pass the error message from the API back to the frontend
-            return response.status(openRouterResponse.status).send(errorBody.error.message || 'Error from AI provider.');
+            
+            // Pass a concise error message from the API back to the frontend
+            const errorMessage = errorBody.error && errorBody.error.message ? errorBody.error.message : 'Error from AI provider.';
+            return response.status(openRouterResponse.status).send(errorMessage);
         }
 
         const result = await openRouterResponse.json();
