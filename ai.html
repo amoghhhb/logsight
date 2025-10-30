@@ -161,7 +161,7 @@
     <header id="main-header"
         class="sticky top-0 left-0 right-0 z-50 transition-all duration-300 py-4 select-none sticky-nav">
         <nav class="container mx-auto px-6 flex justify-between items-center">
-            <a href="/index" class="flex items-center gap-2 group">
+            <a href="/index" class="flex items-center gap-2 group"> 
                 <img src="LogSight.png" alt="LogSight Logo"
                     class="w-10 h-10 rounded-full transition-all duration-300 group-hover:scale-110">
                 <span class="text-white text-xl font-bold group-hover:text-brand-yellow transition-colors">LogSight</span>
@@ -251,8 +251,7 @@
                             <li><a href="/index"
                                     class="text-gray-400 hover:text-brand-yellow transition-colors">Main Site</a></li>
                             <li><a href="/index#about"
-                                    class="text-gray-400 hover:text-brand-yellow transition-colors">About
-                                    Us</a></li>
+                                    class="text-gray-400 hover:text-brand-yellow transition-colors">About Us</a></li>
                             <li><a href="/index#contact"
                                     class="text-gray-400 hover:text-brand-yellow transition-colors">Contact</a></li>
                         </ul>
@@ -335,10 +334,7 @@
                                     enable: true,
                                     outModes: {
                                         default: "out" // Leave screen at top
-                                    },
-                                    random: false,
-                                    speed: 0.3, // Very slow drift
-                                    straight: true
+                                    }
                                 },
                                 number: {
                                     density: {
@@ -484,8 +480,8 @@
                 const systemPrompt = "You are a log file analysis expert. A user has uploaded a file. Provide a concise, bullet-pointed summary of the file's content. Focus on critical errors, warnings, key events, and overall activity. If it's not a log file, just summarize its content.";
                 const userQuery = `Here is the file content:\n\n${fileContent}\n\nPlease summarize it.`;
 
-                // *** OPENROUTER CALL ***
-                const aiResponse = await callOpenRouterAPI(systemPrompt, userQuery);
+                // *** SECURE SERVERLESS CALL ***
+                const aiResponse = await callServerlessAPI(systemPrompt, userQuery);
                 updateLastAiMessage(aiResponse); // Update the "Analyzing..." message
             }
 
@@ -501,8 +497,8 @@
                 // This is the prompt for *follow-up questions*
                 const systemPrompt = `You are a log file analysis expert. The user has already provided a file with the following content:\n\n${fileContent}\n\nYou have already provided an initial summary. Now, answer the user's follow-up questions based *only* on the file content provided.`;
 
-                // *** OPENROUTER CALL ***
-                callOpenRouterAPI(systemPrompt, userQuery).then(aiResponse => {
+                // *** SECURE SERVERLESS CALL ***
+                callServerlessAPI(systemPrompt, userQuery).then(aiResponse => {
                     updateLastAiMessage(aiResponse);
                 });
             }
@@ -548,65 +544,44 @@
                 uploadSection.classList.remove('hidden');
             }
 
-            // 🚀 --- OPENROUTER API CALL FUNCTION --- 🚀
-            async function callOpenRouterAPI(systemPrompt, userQuery) {
-                // ⭐ PASTE YOUR OPENROUTER API KEY HERE ⭐
-                // GET YOUR KEY FROM: https://openrouter.ai/keys
-                const apiKey = ""; // <--- REPLACE THIS WITH YOUR ACTUAL KEY
+            // 🚀 --- SECURE SERVERLESS API CALL FUNCTION (CALLS VERCEl) --- 🚀
+            // This function securely calls your Vercel serverless endpoint at /api/summarize
+            async function callServerlessAPI(systemPrompt, userQuery) {
                 
-                // Correct API URL for OpenRouter (uses the OpenAI structure)
-                const apiUrl = "https://openrouter.ai/api/v1/chat/completions";
+                // The URL now points to your Vercel serverless function
+                const apiUrl = "/api/summarize";
 
+                // The payload sends the prompts to the serverless function
                 const payload = {
-                    // IMPORTANT: Use an OpenRouter model slug (e.g., openai/gpt-3.5-turbo)
-                    model: "meta-llama/llama-4-maverick:free", 
-                    messages: [
-                        {
-                            role: "system",
-                            content: systemPrompt
-                        },
-                        {
-                            role: "user",
-                            content: userQuery
-                        }
-                    ]
+                    systemPrompt: systemPrompt,
+                    userQuery: userQuery
                 };
 
                 try {
                     const response = await fetch(apiUrl, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
-                            // Authentication via Bearer token (using OpenRouter key)
-                            'Authorization': `Bearer ${apiKey}` 
+                            // Ensure the Vercel function receives JSON data
+                            'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(payload)
                     });
 
+                    // Handle non-OK status codes (like 405, 500, or DeepSeek errors)
                     if (!response.ok) {
-                        const errorBody = await response.text();
-                        console.error("API Error Response:", errorBody);
-                        try {
-                            const errorJson = JSON.parse(errorBody);
-                            // OpenRouter/OpenAI error format
-                            return `Error: ${errorJson.error.message} (Status: ${response.status})`;
-                        } catch (e) {
-                            return `Error: Unable to connect to AI. (Status: ${response.status}). Check console for details.`;
-                        }
+                        const errorText = await response.text();
+                        console.error("Serverless Function Error:", errorText);
+                        // Return a user-friendly error to the chat log
+                        return `Error: AI Request Failed. Status: ${response.status}. Message: ${errorText}`;
                     }
 
-                    const result = await response.json();
-
-                    if (result.choices && result.choices[0].message && result.choices[0].message.content) {
-                        return result.choices[0].message.content;
-                    } else {
-                        console.warn("Unexpected API response structure:", result);
-                        return "Error: Received an unexpected response from the AI.";
-                    }
+                    // The Vercel function sends back only the final text content
+                    const aiResponseText = await response.text();
+                    return aiResponseText;
 
                 } catch (error) {
-                    console.error("Error calling OpenRouter API:", error);
-                    return "Error: Could not reach the AI service. Please check your network connection or API key.";
+                    console.error("Network Error or Server Unreachable:", error);
+                    return "Error: Could not communicate with the serverless function.";
                 }
             }
         });
