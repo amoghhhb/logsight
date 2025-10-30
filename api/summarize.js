@@ -20,21 +20,27 @@ export default async function handler(request, response) {
 
     // 4. Prepare the payload for OpenRouter
     const openRouterPayload = {
-        // Using a highly capable and currently free OpenRouter model.
-        // NOTE: This slug requires that 'ZDR Endpoints Only' is OFF in OpenRouter settings.
-        model: [
-            "deepseek/deepseek-r1:free", 
-            "meta-llama/llama-3-8b-instruct:free", 
-            "mistralai/mistral-7b-instruct:free"
-            ],
+        
+        // CRITICAL FIX: The 'model' field MUST be a single string for the primary model.
+        // We set the highest priority model as the single string.
+        model: "deepseek/deepseek-r1:free", 
+        
         messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userQuery }
         ],
-        // Recommended OpenRouter headers for site attribution
-        extra_headers: {
-            "HTTP-Referer": "https://logsight.vercel.app", // Replace with your site URL
-            "X-Title": "LogSight AI Summarizer"
+        
+        // The list of fallbacks and headers are wrapped inside 'extra_body'
+        // This is the correct way to pass multiple models for fallback/routing on OpenRouter.
+        extra_body: {
+            "models": [ // OpenRouter will try these in order if the primary model fails
+                "deepseek/deepseek-r1:free", 
+                "meta-llama/llama-3-8b-instruct:free", 
+                "mistralai/mistral-7b-instruct:free"
+            ],
+            // Recommended OpenRouter headers for site attribution
+            "X-Title": "LogSight AI Summarizer",
+            "HTTP-Referer": "https://logsight.vercel.app" 
         }
     };
 
