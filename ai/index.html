@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 
-<!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -187,6 +184,51 @@
             /* This is the only part of the overlay that should block clicks */
             pointer-events: all;
         }
+
+        /* Hamburger Animation Styles */
+        .hamburger-line {
+            transition: all 0.3s ease-in-out;
+            transform-origin: center;
+            /* Ensures rotation/movement is centered */
+        }
+
+        .hamburger-open .top-line {
+            transform: translateY(8px) rotate(45deg);
+        }
+
+        .hamburger-open .middle-line {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        .hamburger-open .bottom-line {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+
+        /* 💡 MOBILE MENU ANIMATION STYLES 💡 */
+        /* Use fixed position for the mobile menu to smoothly transition between states */
+        #mobile-menu {
+            /* Base styles for transition */
+            transition: max-height 0.4s ease-in-out, opacity 0.4s ease-in-out;
+            overflow: hidden;
+            /* Important for max-height transition */
+            max-height: 0;
+            /* Starting state (closed) */
+            opacity: 0;
+            /* Starting state (closed) */
+            /* Crucial: Tailwind's 'hidden' class sets display: none, which kills transitions.
+               We will control visibility with JavaScript using the 'hidden' class, 
+               but trigger the animation with the 'menu-active' class before hiding. */
+        }
+
+        /* Class toggled by JavaScript when menu is open/animating */
+        #mobile-menu.menu-active {
+            max-height: 500px;
+            /* Large enough value to show all content */
+            opacity: 1;
+            /* Ending state (open) */
+        }
+        /* 💡 END MOBILE MENU ANIMATION STYLES 💡 */
     </style>
 </head>
 
@@ -208,11 +250,55 @@
                 <span class="text-white text-xl font-bold group-hover:text-brand-yellow transition-colors">LogSight</span>
             </a>
 
-            <a href="/"
-                class="bg-brand-yellow text-brand-navy font-bold py-2 px-5 rounded-lg shadow-lg hover:bg-yellow-300">
-                Home Page
-            </a>
+            <div class="hidden md:flex space-x-8 items-center text-lg">
+                <a href="/#features" class="text-white hover:text-brand-yellow transition-colors font-medium">Features</a>
+                <a href="/#how-it-works" class="text-white hover:text-brand-yellow transition-colors font-medium">How It
+                    Works</a>
+                <a href="/#app-preview" class="text-white hover:text-brand-yellow transition-colors font-medium">App
+                    Preview</a>
+                <a href="/#about" class="text-white hover:text-brand-yellow transition-colors font-medium">About</a>
+                <a href="/#contact"
+                    class="text-white hover:text-brand-yellow transition-colors font-medium py-2 px-5 rounded-lg">
+                    Contact
+                </a>
+            </div>
+
+            <button id="mobile-menu-button" class="md:hidden text-white hover:text-brand-yellow transition-colors p-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path class="hamburger-line top-line" d="M4 6h16"></path>
+                    <path class="hamburger-line middle-line" d="M4 12h16"></path>
+                    <path class="hamburger-line bottom-line" d="M4 18h16"></path>
+                </svg>
+            </button>
         </nav>
+
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4 border-t border-gray-700 mt-2 pt-2 space-y-2">
+            <a href="/"
+                class="block w-full text-center text-white font-medium py-2 px-5 rounded-lg hover:bg-gray-800 transition-colors">
+                Main Site
+            </a>
+            <a href="#features"
+                class="block w-full text-center text-white font-medium py-2 px-5 rounded-lg hover:bg-gray-800 transition-colors">
+                Features
+            </a>
+            <a href="#how-it-works"
+                class="block w-full text-center text-white font-medium py-2 px-5 rounded-lg hover:bg-gray-800 transition-colors">
+                How It Works
+            </a>
+            <a href="#app-preview"
+                class="block w-full text-center text-white font-medium py-2 px-5 rounded-lg hover:bg-gray-800 transition-colors">
+                App Preview
+            </a>
+            <a href="#about"
+                class="block w-full text-center text-white font-medium py-2 px-5 rounded-lg hover:bg-gray-800 transition-colors">
+                About
+            </a>
+            <a href="#contact"
+                class="block w-full text-center text-white font-medium py-2 px-5 rounded-lg hover:bg-gray-800 transition-colors mt-2">
+                Contact
+            </a>
+        </div>
     </header>
 
     <main>
@@ -291,9 +377,15 @@
                         <ul class="space-y-2">
                             <li><a href="/"
                                     class="text-gray-400 hover:text-brand-yellow transition-colors">Main Site</a></li>
-                            <li><a href="/#about"
+                            <li><a href="#features"
+                                    class="text-gray-400 hover:text-brand-yellow transition-colors">Features</a></li>
+                            <li><a href="#how-it-works"
+                                    class="text-gray-400 hover:text-brand-yellow transition-colors">How It Works</a></li>
+                            <li><a href="#app-preview"
+                                    class="text-gray-400 hover:text-brand-yellow transition-colors">App Preview</a></li>
+                            <li><a href="#about"
                                     class="text-gray-400 hover:text-brand-yellow transition-colors">About Us</a></li>
-                            <li><a href="/#contact"
+                            <li><a href="#contact"
                                     class="text-gray-400 hover:text-brand-yellow transition-colors">Contact</a></li>
                         </ul>
                     </div>
@@ -406,6 +498,38 @@
                     console.error("Error loading tsParticles:", error);
                 }
             })();
+
+            // 🍔 --- MOBILE MENU LOGIC (UPDATED FOR CLOSING ANIMATION) --- 🍔
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const hamburgerSvg = mobileMenuButton.querySelector('svg');
+            // Match the CSS transition duration
+            const ANIMATION_DURATION = 400;
+
+            if (mobileMenuButton) {
+                mobileMenuButton.addEventListener('click', () => {
+                    // Toggle hamburger icon animation first
+                    hamburgerSvg.classList.toggle('hamburger-open');
+
+                    if (mobileMenu.classList.contains('hidden')) {
+                        // OPENING: Remove 'hidden' instantly, then add 'menu-active' to trigger slide-down
+                        mobileMenu.classList.remove('hidden');
+                        // Use a short timeout to ensure the browser registers the change from hidden to block 
+                        // before applying the max-height transition.
+                        setTimeout(() => {
+                            mobileMenu.classList.add('menu-active');
+                        }, 10);
+                    } else {
+                        // CLOSING: Remove 'menu-active' to trigger slide-up
+                        mobileMenu.classList.remove('menu-active');
+                        // Use a timeout equal to the animation duration to hide the menu AFTER the animation completes
+                        setTimeout(() => {
+                            mobileMenu.classList.add('hidden');
+                        }, ANIMATION_DURATION);
+                    }
+                });
+            }
+            // 🍔 --- END MOBILE MENU LOGIC --- 🍔
 
 
             // --- AI Summarizer Logic Variables ---
