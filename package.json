@@ -1,0 +1,11 @@
+{
+  "name": "logsight-summarizer",
+  "version": "1.0.0",
+  "dependencies": {
+    "openai": "^4.0.0"
+  },
+  "main": "api/summarize.js",
+  "engines": {
+    "node": "18.x" // Use a stable, widely supported LTS version
+  }
+}
