@@ -368,8 +368,9 @@
                 <a href="#contact"
                     class="nav-link text-gray-300 hover:text-brand-yellow transition-colors duration-200 font-medium text-brand-yellow hover:text-yellow-300">Contact</a>
             </div>
-
-            <a href="#cta"
+            
+            <a href="https://ewiszqsbcohubeogocmy.supabase.co/storage/v1/object/public/logsight/LogSight_Setup_1.30.exe"
+                download="LogSight_Setup_1.30.exe"
                 class="hidden md:block bg-brand-yellow text-brand-navy font-bold py-2 px-5 rounded-lg shadow-lg hover:bg-yellow-300 animate-pulse-slow">
                 Download
             </a>
@@ -396,7 +397,8 @@
                         A powerful, secure desktop tool for Forensic Experts, accessible to all.
                         Scan, analyze, and monitor log files with unparalleled precision, right on your machine.
                     </p>
-                    <a href="#cta"
+                    <a href="https://ewiszqsbcohubeogocmy.supabase.co/storage/v1/object/public/logsight/LogSight_Setup_1.30.exe"
+                        download="LogSight_Setup_1.30.exe"
                         class="gsap-hero bg-brand-yellow text-brand-navy font-bold py-4 px-10 rounded-lg shadow-lg hover:bg-yellow-300 text-lg mt-10 animate-pulse-slow">
                         Download Now (v1.30)
                     </a>
@@ -645,7 +647,7 @@
                             <h4 class="text-gray-400 text-sm font-medium mb-2">Status Log:</h4>
                             <div id="terminal-output"
                                 class="w-full h-64 bg-black rounded-lg p-4 font-mono text-sm text-green-400 overflow-y-auto">
-                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -663,11 +665,12 @@
                     Download the latest version of LogSight for your desktop.
                     Secure, offline-first analysis is just one click away.
                 </p>
-                <a href="#"
+                <a href="https://ewiszqsbcohubeogocmy.supabase.co/storage/v1/object/public/logsight/LogSight_Setup_1.30.exe"
+                    download="LogSight_Setup_1.30.exe"
                     class="bg-brand-yellow text-brand-navy font-bold py-4 px-12 rounded-lg shadow-lg hover:bg-yellow-300 text-xl animate-pulse-slow">
                     Download Now (v1.30)
                 </a>
-            </div>
+                </div>
         </section>
 
         <div class="h-1 bg-gradient-to-r from-transparent via-brand-blue to-transparent opacity-30"></div>
@@ -792,7 +795,7 @@
             // Project URL derived from JWT payload: ewisząsbcohubeogocmy
             const SUPABASE_URL = 'https://ewiszqsbcohubeogocmy.supabase.co';
             // Anon Public Key confirmed by user
-            const SUPABASE_ANON_KEY = 'sb_publishable_CP1T-2gM6gOzcq6Owatx1w_sThP4ZQZ'; 
+            const SUPABASE_ANON_KEY = 'sb_publishable_CP1T-2gM6gOzcq6Owatx1w_sThP4ZQZ';
 
             let supabase = null;
 
@@ -806,7 +809,7 @@
                 }
             }
             // =======================================================================
-            
+
             const glowOrb = document.getElementById('glow-orb');
             const terminalOutput = document.getElementById('terminal-output');
             const btnScanner = document.getElementById('btn-scanner');
@@ -826,8 +829,8 @@
             }
 
             async function handleContactFormSubmission(event) {
-                event.preventDefault(); 
-                
+                event.preventDefault();
+
                 // FIX: Check if the client was successfully initialized
                 if (!supabase) {
                     alert('Supabase client not initialized. Please check the browser console for specific errors, or try a hard refresh (Ctrl+Shift+R).');
@@ -836,23 +839,23 @@
 
                 const submitButton = contactForm.querySelector('button[type="submit"]');
                 const originalText = submitButton.textContent;
-                
+
                 submitButton.disabled = true;
                 submitButton.textContent = 'Sending...';
                 submitButton.classList.remove('animate-pulse-slow'); // Stop pulsing while sending
 
                 const formData = new FormData(contactForm);
-                
+
                 // Create object mapping form field names to Supabase column names
                 const formObject = {
                     full_name: formData.get('full_name'),
                     email_address: formData.get('email_address'),
                     user_message: formData.get('user_message'),
                 };
-                
+
                 // IMPORTANT: Ensure 'contact_submissions' matches the table name in your Supabase database
                 const { error } = await supabase
-                    .from('contact_submissions') 
+                    .from('contact_submissions')
                     .insert([formObject]);
 
                 if (error) {
@@ -861,7 +864,7 @@
                     alert(`Error submitting form. Ensure RLS is enabled for 'anon' role on the 'contact_submissions' table.`);
                 } else {
                     alert('Success! Your message has been sent to LogSight.');
-                    contactForm.reset(); 
+                    contactForm.reset();
                 }
 
                 // Reset button state
@@ -991,7 +994,7 @@
                         options: {
                             background: {
                                 color: {
-                                    value: "#0a192f"
+                                    value: "#0a192f" // Dark background
                                 }
                             },
                             fpsLimit: 60,
