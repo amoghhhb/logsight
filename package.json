@@ -4,12 +4,12 @@
   "description": "AI-Powered Log Summarizer (Vercel Node.js)", 
   "main": "Website/api/summarize.js", 
   "scripts": {
-    "start": "node Website/api/summarize.js"
-  }, // <--- Check here! This closing bracket MUST be followed by a comma (,)
-  "dependencies": { // <--- The error is likely pointing to the start of this line.
+    "start": "node Website/api/summarize.js" // Check the double quotes around "start"
+  }, // <--- Check for a missing comma after this line
+  "dependencies": { // <--- This key MUST be surrounded by double quotes
     "@google/genai": "^0.15.0"
   }, 
-  "engines": {
+  "engines": { // <--- This key MUST be surrounded by double quotes
     "node": "20.x"
   }
 }
