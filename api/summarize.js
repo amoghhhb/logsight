@@ -1,23 +1,21 @@
-// File Location: api/summarize.js
-
-// NOTE: This file uses native Node.js 'fetch' and does NOT require package.json.
+// File Location: api/summarize.js (No external dependencies used)
 
 export default async function handler(request, response) {
-    // 1. Enforce POST requests
+    // 1. Enforce POST requests and handle the request body
     if (request.method !== 'POST') {
         return response.status(405).send('Method Not Allowed');
     }
-
-    // 2. Get Data and API Key
-    const { systemPrompt, userQuery } = await request.json(); // Use request.json() to parse body
+    
+    // Vercel's Node runtime supports request.json() to parse the body
+    const { systemPrompt, userQuery } = await request.json(); 
 
     const apiKey = process.env.OPENAI_API_KEY;
 
     if (!apiKey) {
-        return response.status(500).send('Server configuration error: OPENAI_API_KEY is missing.');
+        return response.status(500).send('Server error: OPENAI_API_KEY not found.');
     }
 
-    // 3. Prepare Payload for OpenAI
+    // 2. Prepare Payload for OpenAI
     const openAiPayload = {
         model: 'gpt-3.5-turbo',
         messages: [
@@ -28,18 +26,18 @@ export default async function handler(request, response) {
     };
 
     try {
-        // 4. Call OpenAI API using native fetch()
+        // 3. Call OpenAI API using native fetch()
         const openAiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                // Authorization is the most critical part
+                // Authorization is critical
                 'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify(openAiPayload)
         });
 
-        // 5. Handle Errors (e.g., 401, 429) from OpenAI
+        // 4. Handle Errors (e.g., 429 Quota Exceeded)
         if (!openAiResponse.ok) {
             const errorText = await openAiResponse.text();
             console.error("OpenAI API Error:", errorText);
@@ -51,14 +49,14 @@ export default async function handler(request, response) {
         const aiResponseText = result.choices[0]?.message?.content?.trim();
 
         if (aiResponseText) {
-            // 6. Success: Send the AI response back
+            // 5. Success: Send the AI response back
             response.status(200).send(aiResponseText);
         } else {
             response.status(500).send('The AI returned an empty response.');
         }
 
     } catch (error) {
-        console.error("Network Error:", error);
+        console.error("Network or Runtime Error:", error);
         response.status(500).send(`Internal Server Error: ${error.message}`);
     }
 }
