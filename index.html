@@ -367,8 +367,33 @@
                     class="nav-link text-white hover:text-brand-yellow transition-colors duration-200 font-medium">Contact</a>
             </div>
 
+            <button id="mobile-menu-button" class="md:hidden p-2 rounded-md hover:bg-gray-700 transition-colors z-50"
+                aria-label="Toggle menu">
+                <svg id="menu-icon" class="w-6 h-6 text-brand-yellow" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16">
+                    </path>
+                </svg>
+                <svg id="close-icon" class="w-6 h-6 text-brand-yellow hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
         </nav>
     </header>
+
+    <div id="mobile-menu"
+        class="fixed inset-0 pt-20 h-screen w-full bg-brand-navy z-40 transform translate-x-full transition-transform duration-300 md:hidden">
+        <div class="flex flex-col items-center space-y-6 pt-10">
+            <a href="/ai" class="nav-link text-gray-300 text-xl hover:text-brand-yellow transition-colors duration-200">AI Summarizer</a>
+            <a href="#features" class="nav-link text-gray-300 text-xl hover:text-brand-yellow transition-colors duration-200">Features</a>
+            <a href="#how-it-works" class="nav-link text-gray-300 text-xl hover:text-brand-yellow transition-colors duration-200">How It Works</a>
+            <a href="#app-preview" class="nav-link text-gray-300 text-xl hover:text-brand-yellow transition-colors duration-200">App Preview</a>
+            <a href="#about" class="nav-link text-gray-300 text-xl hover:text-brand-yellow transition-colors duration-200">About</a>
+            <a href="#contact" class="nav-link text-white text-xl hover:text-brand-yellow transition-colors duration-200 font-medium py-2 px-4 rounded-lg bg-gray-800 hover:bg-gray-700">Contact</a>
+        </div>
+    </div>
+
 
     <main>
 
@@ -642,7 +667,7 @@
                         <div class="text-gray-400 text-sm mx-auto font-medium">LogSight v1.30</div>
                     </div>
                     <div class="flex">
-                        <div class="w-1/4 bg-gray-800 bg-opacity-75 p-4 border-r border-gray-700">
+                        <div class="w-1/3 bg-gray-800 bg-opacity-75 p-4 border-r border-gray-700">
                             <h3 class="text-white font-bold mb-4">Controls</h3>
                             <div class="space-y-2">
                                 <div id="btn-scanner"
@@ -655,7 +680,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="w-3/4 bg-gray-900 p-4">
+                        <div class="w-2/3 bg-gray-900 p-4">
                             <h4 class="text-gray-400 text-sm font-medium mb-2">Status Log:</h4>
                             <div id="terminal-output"
                                 class="w-full h-64 bg-black rounded-lg p-4 font-mono text-sm text-green-400 overflow-y-auto">
@@ -829,6 +854,40 @@
             const btnMonitor = document.getElementById('btn-monitor');
             const contactForm = document.getElementById('contact-form');
 
+            // --- Mobile Menu Toggle Logic ---
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const menuIcon = document.getElementById('menu-icon');
+            const closeIcon = document.getElementById('close-icon');
+            const mobileNavLinks = mobileMenu ? mobileMenu.querySelectorAll('a') : [];
+
+            function toggleMobileMenu() {
+                const isMenuOpen = mobileMenu.classList.toggle('translate-x-full'); 
+                mobileMenu.classList.toggle('translate-x-0'); 
+
+                // Toggle icons
+                menuIcon.classList.toggle('hidden');
+                closeIcon.classList.toggle('hidden');
+                
+                // Prevent scrolling on the body when menu is open
+                document.body.style.overflow = isMenuOpen ? 'auto' : 'hidden'; 
+            }
+
+            if (mobileMenuButton && mobileMenu) {
+                mobileMenuButton.addEventListener('click', toggleMobileMenu);
+
+                // Close menu when a link is clicked
+                mobileNavLinks.forEach(link => {
+                    link.addEventListener('click', () => {
+                        if (mobileMenu.classList.contains('translate-x-0')) {
+                            toggleMobileMenu();
+                        }
+                    });
+                });
+            }
+            // --- End Mobile Menu Toggle Logic ---
+
+
             // --- Mouse-following glow ---
             document.addEventListener('mousemove', (e) => {
                 if (glowOrb) {
@@ -854,7 +913,7 @@
 
                 submitButton.disabled = true;
                 submitButton.textContent = 'Sending...';
-                submitButton.classList.remove('animate-pulse-slow'); // Stop pulsing while sending
+                submitButton.classList.remove('animate-pulse-slow'); 
 
                 const formData = new FormData(contactForm);
 
@@ -865,7 +924,7 @@
                 };
 
                 const { error } = await supabase
-                    .from('contact_submissions') // IMPORTANT: Verify table name is 'contact_submissions'
+                    .from('contact_submissions') 
                     .insert([formObject]);
 
                 if (error) {
@@ -884,7 +943,7 @@
             // --- End Contact Form Logic ---
 
 
-            // --- Animated Terminal Logic ---
+            // --- Animated Terminal Logic (Adjusted timing for better flow) ---
             const scannerLines = [
                 { prefix: '[INFO] ', text: 'Starting LogSight v1.30...', color: 'text-brand-gray-light' },
                 { prefix: '[INFO] ', text: 'Scan mode initiated. Target: C:\\Windows\\Logs', color: 'text-brand-gray-light' },
@@ -925,7 +984,6 @@
                 currentLineElement.className = 'terminal-line';
 
                 if (lineObject.color) {
-                    // Use lineObject.color directly as Tailwind class(es)
                     currentLineElement.classList.add(...lineObject.color.split(' '));
                 }
                 if (lineObject.color.includes('red') || lineObject.color.includes('yellow')) {
@@ -933,6 +991,8 @@
                 }
 
                 terminalOutput.appendChild(currentLineElement);
+                // Ensure scroll to bottom immediately
+                terminalOutput.scrollTop = terminalOutput.scrollHeight;
 
                 const spanElement = document.createElement('span');
                 currentLineElement.appendChild(spanElement);
@@ -947,12 +1007,12 @@
                             terminalOutput.scrollTop = terminalOutput.scrollHeight;
                         }
                         // Set timeout for next line
-                        nextLineTimeout = setTimeout(typeLine, 150); // Delay between lines
+                        nextLineTimeout = setTimeout(typeLine, 100); 
                     } else {
                         spanElement.textContent += lineText[charIndex];
                         charIndex++;
                     }
-                }, 25);
+                }, 20); 
             }
 
             function startTyping() {
@@ -962,7 +1022,7 @@
                     typeCharInterval = null;
                 }
                 if (nextLineTimeout) {
-                    clearTimeout(nextLineTimeout); // Clear pending next line
+                    clearTimeout(nextLineTimeout); 
                     nextLineTimeout = null;
                 }
 
@@ -979,18 +1039,18 @@
                     currentLines = scannerLines;
                     startTyping();
                     btnScanner.classList.add('bg-brand-blue', 'text-white');
-                    btnScanner.classList.remove('text-gray-300', 'hover:bg-gray-700'); // Clean up non-active styles
+                    btnScanner.classList.remove('text-gray-300', 'hover:bg-gray-700'); 
                     btnMonitor.classList.remove('bg-brand-blue', 'text-white');
-                    btnMonitor.classList.add('text-gray-300', 'hover:bg-gray-700'); // Apply non-active styles
+                    btnMonitor.classList.add('text-gray-300', 'hover:bg-gray-700'); 
                 });
 
                 btnMonitor.addEventListener('click', () => {
                     currentLines = monitorLines;
                     startTyping();
                     btnMonitor.classList.add('bg-brand-blue', 'text-white');
-                    btnMonitor.classList.remove('text-gray-300', 'hover:bg-gray-700'); // Clean up non-active styles
+                    btnMonitor.classList.remove('text-gray-300', 'hover:bg-gray-700'); 
                     btnScanner.classList.remove('bg-brand-blue', 'text-white');
-                    btnScanner.classList.add('text-gray-300', 'hover:bg-gray-700'); // Apply non-active styles
+                    btnScanner.classList.add('text-gray-300', 'hover:bg-gray-700'); 
                 });
             }
 
@@ -1006,7 +1066,7 @@
                         options: {
                             background: {
                                 color: {
-                                    value: "#0a192f" // Dark background
+                                    value: "#0a192f" 
                                 }
                             },
                             fpsLimit: 60,
@@ -1014,31 +1074,31 @@
                                 events: {
                                     onHover: {
                                         enable: true,
-                                        mode: "repulse" // Move away from mouse
+                                        mode: "repulse" 
                                     }
                                 },
                                 modes: {
                                     repulse: {
-                                        distance: 100, // Area of effect
+                                        distance: 100, 
                                         duration: 0.4
                                     }
                                 }
                             },
                             particles: {
                                 color: {
-                                    value: "#ffffff" // White stars
+                                    value: "#ffffff" 
                                 },
-                                links: { // Disable links
+                                links: { 
                                     enable: false
                                 },
                                 move: {
-                                    direction: "top", // Move upwards
+                                    direction: "top", 
                                     enable: true,
                                     outModes: {
-                                        default: "out" // Leave screen at top
+                                        default: "out" 
                                     },
                                     random: false,
-                                    speed: 0.3, // Very slow drift
+                                    speed: 0.3, 
                                     straight: true
                                 },
                                 number: {
@@ -1046,10 +1106,10 @@
                                         enable: true,
                                         area: 800
                                     },
-                                    value: 150 // More stars
+                                    value: 150 
                                 },
                                 opacity: {
-                                    value: { min: 0.3, max: 0.8 }, // Twinkling effect
+                                    value: { min: 0.3, max: 0.8 }, 
                                     animation: {
                                         enable: true,
                                         speed: 1,
@@ -1060,7 +1120,7 @@
                                     type: "circle"
                                 },
                                 size: {
-                                    value: { min: 0.5, max: 2 } // Small stars
+                                    value: { min: 0.5, max: 2 } 
                                 }
                             },
                             detectRetina: true
@@ -1120,8 +1180,8 @@
                     ease: "power1.inOut",
                     scrollTrigger: {
                         trigger: "#how-it-works",
-                        start: "top 60%", // Start animation sooner
-                        end: "bottom 80%", // End animation sooner
+                        start: "top 60%", 
+                        end: "bottom 80%", 
                         scrub: 1.5
                     }
                 });
@@ -1135,7 +1195,7 @@
                 duration: 0.8,
                 ease: 'power3.out',
                 scrollTrigger: {
-                    trigger: "#how-it-works .container", // Target the container
+                    trigger: "#how-it-works .container", 
                     start: "top 75%"
                 }
             });
@@ -1162,19 +1222,15 @@
             sections.forEach(section => {
                 ScrollTrigger.create({
                     trigger: section,
-                    // Use 'center' trigger points for a more intuitive active state change
                     start: "top center",
                     end: "bottom center",
                     onToggle: self => {
                         const id = section.getAttribute('id');
-                        // Use a precise selector for the corresponding nav link
                         const correspondingLink = document.querySelector(`.nav-link[href="#${id}"]`);
 
                         if (self.isActive) {
-                            // Deactivate all links
                             navLinks.forEach(link => link.classList.remove('active'));
                             
-                            // Activate the current link
                             if (correspondingLink) {
                                 correspondingLink.classList.add('active');
                             }
