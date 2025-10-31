@@ -161,7 +161,7 @@
     <header id="main-header"
         class="sticky top-0 left-0 right-0 z-50 transition-all duration-300 py-4 select-none sticky-nav">
         <nav class="container mx-auto px-6 flex justify-between items-center">
-            <a href="/index" class="flex items-center gap-2 group"> 
+            <a href="/index" class="flex items-center gap-2 group">
                 <img src="LogSight.png" alt="LogSight Logo"
                     class="w-10 h-10 rounded-full transition-all duration-300 group-hover:scale-110">
                 <span class="text-white text-xl font-bold group-hover:text-brand-yellow transition-colors">LogSight</span>
@@ -260,9 +260,9 @@
                         <h5 class="font-semibold text-gray-300 mb-3">Legal</h5>
                         <ul class="space-y-2">
                             <li><a href="#" class="text-gray-400 hover:text-brand-yellow transition-colors">Privacy
-                                    Policy</a></li>
+                                        Policy</a></li>
                             <li><a href="#" class="text-gray-400 hover:text-brand-yellow transition-colors">Terms of
-                                    Service</a></li>
+                                        Service</a></li>
                         </ul>
                     </div>
                 </div>
@@ -544,10 +544,10 @@
                 uploadSection.classList.remove('hidden');
             }
 
-            // 🚀 --- SECURE SERVERLESS API CALL FUNCTION (CALLS VERCEl) --- 🚀
+            // 🚀 --- SECURE SERVERLESS API CALL FUNCTION (CALLS VERCEL) --- 🚀
             // This function securely calls your Vercel serverless endpoint at /api/summarize
             async function callServerlessAPI(systemPrompt, userQuery) {
-                
+
                 // The URL now points to your Vercel serverless function
                 const apiUrl = "/api/summarize";
 
@@ -567,7 +567,7 @@
                         body: JSON.stringify(payload)
                     });
 
-                    // Handle non-OK status codes (like 405, 500, or DeepSeek errors)
+                    // Handle non-OK status codes (like 400, 500, or OpenAI errors)
                     if (!response.ok) {
                         const errorText = await response.text();
                         console.error("Serverless Function Error:", errorText);
