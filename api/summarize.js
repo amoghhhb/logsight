@@ -1,10 +1,11 @@
-// File Location: Website/api/summarize.js
+// File Location: api/summarize.js
 
-import { GoogleGenAI } from '@google/genai';
+import OpenAI from 'openai';
 
-// Initialize the Gemini client. It automatically looks for the 
-// GEMINI_API_KEY environment variable set in Vercel.
-const ai = new GoogleGenAI({}); 
+// NOTE: This requires the 'openai' package to be installed and Vercel to find it.
+// It also requires the OPENAI_API_KEY environment variable.
+
+const openai = new OpenAI({});
 
 export default async function handler(request, response) {
     // 1. Method Check
@@ -12,45 +13,41 @@ export default async function handler(request, response) {
         return response.status(405).send('Method Not Allowed');
     }
 
-    // 2. Extract Data
+    // 2. Get Data
     const { systemPrompt, userQuery } = request.body;
 
-    // 3. Environment Check (Crucial for Vercel secrets)
-    if (!process.env.GEMINI_API_KEY) {
-        console.error("GEMINI_API_KEY environment variable is not set.");
-        return response.status(500).send('Server configuration error: Gemini service key missing.');
+    // 3. Environment Check
+    if (!process.env.OPENAI_API_KEY) {
+        console.error("OPENAI_API_KEY environment variable is not set.");
+        return response.status(500).send('Server configuration error: OpenAI service key missing.');
     }
 
-    // 4. Model Selection (Free and fast model)
-    const model = 'gemini-2.5-flash'; 
+    const model = 'gpt-3.5-turbo'; // Low-cost, high-performance model
 
     try {
-        // 5. Execute API Call
-        const geminiResponse = await ai.models.generateContent({
+        // 4. Call OpenAI API
+        const completion = await openai.chat.completions.create({
             model: model,
-            contents: [
-                // Gemini separates the user query from the system instruction (context)
-                { role: "user", parts: [{ text: userQuery }] }
+            messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: userQuery }
             ],
-            config: {
-                systemInstruction: systemPrompt, // Sets the expert role for the AI
-                temperature: 0.1, // Low temperature for factual summarization
-            }
+            temperature: 0.1, 
         });
 
-        const aiResponseText = geminiResponse.text.trim();
+        const aiResponseText = completion.choices[0]?.message?.content?.trim();
 
         if (aiResponseText) {
-            // 6. Success: Send the AI response back to the frontend
+            // 5. Send response
             response.status(200).send(aiResponseText);
         } else {
             response.status(500).send('The AI returned an empty response.');
         }
 
     } catch (error) {
-        // 7. Error Handling
-        console.error("Gemini API Call Error:", error);
+        console.error("OpenAI API Call Error:", error);
         
+        // This is where the 429 quota error will be caught if your billing is not fixed.
         const errorMessage = error.message || 'An unknown error occurred during the AI request.';
         response.status(400).send(`AI Service Error: ${errorMessage}`);
     }
