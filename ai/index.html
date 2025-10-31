@@ -152,7 +152,7 @@
             -ms-user-select: none;
         }
 
-        /* Custom styles for the Coming Soon overlay - UPDATED POINTER-EVENTS */
+        /* Custom styles for the Coming Soon overlay - CRITICAL FIX APPLIED */
         #coming-soon-overlay {
             position: fixed;
             top: 0;
@@ -170,8 +170,7 @@
             justify-content: center;
             align-items: center;
             text-align: center;
-            /* Allow clicks to pass through the overlay (but not the text inside) */
-            pointer-events: none;
+            /* FIX: Default pointer-events: auto will now block clicks to content underneath */
         }
 
         #coming-soon-text {
@@ -181,8 +180,8 @@
             font-size: 4rem;
             font-weight: 900;
             text-shadow: 0 0 20px rgba(250, 204, 21, 0.8);
-            /* This is the only part of the overlay that should block clicks */
-            pointer-events: all;
+            /* Ensure the text block itself is clickable/interactable */
+            pointer-events: auto;
         }
 
         /* Hamburger Animation Styles */
@@ -217,8 +216,8 @@
             opacity: 0;
             /* Starting state (closed) */
             /* Crucial: Tailwind's 'hidden' class sets display: none, which kills transitions.
-               We will control visibility with JavaScript using the 'hidden' class, 
-               but trigger the animation with the 'menu-active' class before hiding. */
+                We will control visibility with JavaScript using the 'hidden' class, 
+                but trigger the animation with the 'menu-active' class before hiding. */
         }
 
         /* Class toggled by JavaScript when menu is open/animating */
