@@ -5,10 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LogSight - Forensic Log Analysis</title>
-    
-    <link rel="icon" type="image/png" href="LogSight1.png">
-    <link rel="shortcut icon" href="LogSight1.png"> 
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
         rel="stylesheet">
@@ -51,7 +47,6 @@
             width: 100%;
             height: 100%;
             z-index: 1;
-            /* Sits behind content */
         }
 
         /* Mouse-following glow effect - Z-index fixed to 5 */
@@ -66,7 +61,6 @@
             pointer-events: none;
             transition: transform 0.1s ease-out;
             z-index: 5;
-            /* Below nav (z-50), above particles (z-1) */
         }
 
         /* Custom scrollbar */
@@ -80,17 +74,15 @@
 
         ::-webkit-scrollbar-thumb {
             background-color: #facc15;
-            /* Changed to Yellow accent */
             border-radius: 10px;
             border: 2px solid #0a192f;
         }
 
-        /* Sticky nav background blur */
+        /* Sticky nav background blur - REPLACED Z-INDEX with Tailwind z-50 */
         .sticky-nav {
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             background-color: rgba(10, 25, 47, 0.9);
-            /* Slightly more opaque */
             border-bottom: 1px solid rgba(59, 130, 246, 0.2);
             position: fixed;
             top: 0;
@@ -98,7 +90,6 @@
             right: 0;
             width: 100%;
             z-index: 50;
-            /* Highest z-index */
         }
 
         /* Ensure main content and footer sit above particles */
@@ -113,10 +104,54 @@
             padding-top: 80px;
         }
 
+        /*
+        ======================================================================
+        🍔 NAV/HAMBURGER STYLES (FROM REFERENCE CODE) 🍔
+        ======================================================================
+        */
+        
+        /* Hamburger Animation Styles */
+        .hamburger-line {
+            transition: all 0.3s ease-in-out;
+            transform-origin: center;
+        }
+
+        .hamburger-open .top-line {
+            transform: translateY(8px) rotate(45deg);
+        }
+
+        .hamburger-open .middle-line {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        .hamburger-open .bottom-line {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+        
+        /* MOBILE MENU ANIMATION STYLES: Slide-down/up using max-height/opacity */
+        #mobile-menu {
+            transition: max-height 0.4s ease-in-out, opacity 0.4s ease-in-out;
+            overflow: hidden; 
+            max-height: 0; /* Starting state (closed) */
+            opacity: 0; /* Starting state (closed) */
+        }
+
+        /* Class toggled by JavaScript when menu is open/animating */
+        #mobile-menu.menu-active {
+            max-height: 500px; /* Large enough value to show all content */
+            opacity: 1; /* Ending state (open) */
+        }
+        /*
+        ======================================================================
+        END NAV/HAMBURGER STYLES
+        ======================================================================
+        */
+
 
         /*
         =======================================================================
-        ANIMATIONS
+        OTHER ANIMATIONS (Kept from original code)
         =======================================================================
         */
 
@@ -137,7 +172,6 @@
             50% {
                 opacity: 0.9;
                 transform: scale(1.03);
-                /* Less aggressive scale */
             }
         }
 
@@ -145,9 +179,7 @@
         .animate-pulse-slow:hover {
             animation: none;
             transform: scale(1.05);
-            /* Slightly bigger scale */
             box-shadow: 0 0 30px 5px rgba(250, 204, 21, 0.7);
-            /* Stronger glow */
             background-color: #facc15;
         }
 
@@ -161,7 +193,6 @@
 
             50% {
                 transform: translateY(-8px);
-                /* Less aggressive float */
             }
         }
 
@@ -368,35 +399,47 @@
                 <a href="#about"
                     class="nav-link text-gray-300 hover:text-brand-yellow transition-colors duration-200">About</a>
                 <a href="#contact"
-                    class="nav-link text-white hover:text-brand-yellow transition-colors duration-200 font-medium">Contact</a>
+                    class="nav-link text-gray-300 hover:text-brand-yellow transition-colors duration-200 font-medium">Contact</a>
             </div>
 
-            <button id="mobile-menu-button" class="md:hidden p-2 rounded-md hover:bg-gray-700 transition-colors z-50"
-                aria-label="Toggle menu">
-                <svg id="menu-icon" class="w-6 h-6 text-brand-yellow" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16">
-                    </path>
-                </svg>
-                <svg id="close-icon" class="w-6 h-6 text-brand-yellow hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            <button id="mobile-menu-button" class="md:hidden text-brand-yellow hover:text-yellow-300 transition-colors p-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path class="hamburger-line top-line" d="M4 6h16"></path>
+                    <path class="hamburger-line middle-line" d="M4 12h16"></path>
+                    <path class="hamburger-line bottom-line" d="M4 18h16"></path>
                 </svg>
             </button>
-        </nav>
-    </header>
 
-    <div id="mobile-menu"
-        class="fixed inset-0 pt-20 h-screen w-full bg-brand-navy z-40 transform translate-x-full transition-transform duration-300 md:hidden">
-        <div class="flex flex-col items-center space-y-6 pt-10">
-            <a href="/ai" class="nav-link text-gray-300 text-xl hover:text-brand-yellow transition-colors duration-200">AI Summarizer</a>
-            <a href="#features" class="nav-link text-gray-300 text-xl hover:text-brand-yellow transition-colors duration-200">Features</a>
-            <a href="#how-it-works" class="nav-link text-gray-300 text-xl hover:text-brand-yellow transition-colors duration-200">How It Works</a>
-            <a href="#app-preview" class="nav-link text-gray-300 text-xl hover:text-brand-yellow transition-colors duration-200">App Preview</a>
-            <a href="#about" class="nav-link text-gray-300 text-xl hover:text-brand-yellow transition-colors duration-200">About</a>
-            <a href="#contact" class="nav-link text-white text-xl hover:text-brand-yellow transition-colors duration-200 font-medium py-2 px-4 rounded-lg bg-gray-800 hover:bg-gray-700">Contact</a>
+        </nav>
+
+        <div id="mobile-menu" class="md:hidden px-6 pb-4 border-t border-gray-700 mt-2 pt-2 space-y-2 hidden">
+            <a href="/ai"
+                class="nav-link block w-full text-center text-white font-medium py-2 px-5 rounded-lg hover:bg-gray-800 transition-colors">
+                AI Summarizer
+            </a>
+            <a href="#features"
+                class="nav-link block w-full text-center text-white font-medium py-2 px-5 rounded-lg hover:bg-gray-800 transition-colors">
+                Features
+            </a>
+            <a href="#how-it-works"
+                class="nav-link block w-full text-center text-white font-medium py-2 px-5 rounded-lg hover:bg-gray-800 transition-colors">
+                How It Works
+            </a>
+            <a href="#app-preview"
+                class="nav-link block w-full text-center text-white font-medium py-2 px-5 rounded-lg hover:bg-gray-800 transition-colors">
+                App Preview
+            </a>
+            <a href="#about"
+                class="nav-link block w-full text-center text-white font-medium py-2 px-5 rounded-lg hover:bg-gray-800 transition-colors">
+                About
+            </a>
+            <a href="#contact"
+                class="nav-link block w-full text-center text-white font-medium py-2 px-5 rounded-lg hover:bg-gray-800 transition-colors">
+                Contact
+            </a>
         </div>
-    </div>
+    </header>
 
 
     <main>
@@ -422,7 +465,7 @@
                     <a href="#cta"
                         class="gsap-hero bg-brand-yellow text-brand-navy font-bold py-4 px-10 rounded-lg shadow-lg hover:bg-yellow-300 text-lg mt-10 animate-pulse-slow
                         shadow-xl shadow-yellow-500/50">
-                        Download Now
+                        Download Now (v1.30)
                     </a>
                 </div>
 
@@ -512,21 +555,6 @@
                         <h3 class="text-2xl font-bold text-white mb-2">Time-Range Filter</h3>
                         <p class="text-gray-400">Narrow your analysis to a specific timeframe. Only analyze log entries
                             created between your chosen dates and times.</p>
-                    </div>
-
-                    <div
-                        class="gsap-reveal-card bg-gray-800 bg-opacity-50 p-6 rounded-xl shadow-lg border border-gray-700 transition-all duration-300 hover:scale-[1.03]
-                        hover:ring-2 hover:ring-offset-2 hover:ring-brand-yellow hover:ring-offset-brand-navy">
-                        <div class="p-2 w-fit bg-gray-900 rounded-full mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                stroke="currentColor" class="w-10 h-10 text-brand-yellow">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h12A2.25 2.25 0 0120.25 6v3.776" />
-                            </svg>
-                        </div>
-                        <h3 class="text-2xl font-bold text-white mb-2">Secure Backup</h3>
-                        <p class="text-gray-400">Create a `.zip` archive of all discovered log files with a single click,
-                            securing your evidence.</p>
                     </div>
                 </div>
             </div>
@@ -710,7 +738,7 @@
                     download="LogSight_Setup_1.30.exe"
                     class="bg-brand-yellow text-brand-navy font-bold py-4 px-12 rounded-lg shadow-lg hover:bg-yellow-300 text-xl animate-pulse-slow
                     shadow-xl shadow-yellow-500/50">
-                    Download Now
+                    Download Now (v1.30)
                 </a>
             </div>
         </section>
@@ -858,23 +886,32 @@
             const btnMonitor = document.getElementById('btn-monitor');
             const contactForm = document.getElementById('contact-form');
 
-            // --- Mobile Menu Toggle Logic ---
+            // --- 🍔 MOBILE MENU LOGIC (FIXED) 🍔 ---
             const mobileMenuButton = document.getElementById('mobile-menu-button');
             const mobileMenu = document.getElementById('mobile-menu');
-            const menuIcon = document.getElementById('menu-icon');
-            const closeIcon = document.getElementById('close-icon');
+            const hamburgerSvg = mobileMenuButton.querySelector('svg');
             const mobileNavLinks = mobileMenu ? mobileMenu.querySelectorAll('a') : [];
+            const ANIMATION_DURATION = 400; // Match CSS transition duration
 
             function toggleMobileMenu() {
-                const isMenuOpen = mobileMenu.classList.toggle('translate-x-full'); 
-                mobileMenu.classList.toggle('translate-x-0'); 
+                // Toggle hamburger icon animation first
+                hamburgerSvg.classList.toggle('hamburger-open');
 
-                // Toggle icons
-                menuIcon.classList.toggle('hidden');
-                closeIcon.classList.toggle('hidden');
-                
-                // Prevent scrolling on the body when menu is open
-                document.body.style.overflow = isMenuOpen ? 'auto' : 'hidden'; 
+                if (mobileMenu.classList.contains('hidden')) {
+                    // OPENING: Remove 'hidden' instantly, then add 'menu-active' to trigger slide-down
+                    mobileMenu.classList.remove('hidden');
+                    // Use a short timeout to ensure the browser registers the change from hidden to block 
+                    setTimeout(() => {
+                        mobileMenu.classList.add('menu-active');
+                    }, 10);
+                } else {
+                    // CLOSING: Remove 'menu-active' to trigger slide-up
+                    mobileMenu.classList.remove('menu-active');
+                    // Use a timeout equal to the animation duration to hide the menu AFTER the animation completes
+                    setTimeout(() => {
+                        mobileMenu.classList.add('hidden');
+                    }, ANIMATION_DURATION);
+                }
             }
 
             if (mobileMenuButton && mobileMenu) {
@@ -883,13 +920,14 @@
                 // Close menu when a link is clicked
                 mobileNavLinks.forEach(link => {
                     link.addEventListener('click', () => {
-                        if (mobileMenu.classList.contains('translate-x-0')) {
+                        // Check if menu is conceptually open (has menu-active class)
+                        if (mobileMenu.classList.contains('menu-active')) {
                             toggleMobileMenu();
                         }
                     });
                 });
             }
-            // --- End Mobile Menu Toggle Logic ---
+            // --- END MOBILE MENU LOGIC ---
 
 
             // --- Mouse-following glow ---
@@ -908,7 +946,7 @@
                 event.preventDefault();
 
                 if (!supabase) {
-                    alert('Supabase client not initialized. Cannot send message.');
+                    alert('Supabase client not initialized. Cannot send message. (Check console for error)');
                     return;
                 }
 
@@ -917,7 +955,7 @@
 
                 submitButton.disabled = true;
                 submitButton.textContent = 'Sending...';
-                submitButton.classList.remove('animate-pulse-slow'); 
+                submitButton.classList.remove('animate-pulse-slow');
 
                 const formData = new FormData(contactForm);
 
@@ -928,12 +966,12 @@
                 };
 
                 const { error } = await supabase
-                    .from('contact_submissions') 
+                    .from('contact_submissions')
                     .insert([formObject]);
 
                 if (error) {
                     console.error('Supabase Error:', error);
-                    alert(`Error submitting form. Please check RLS policies.`);
+                    alert(`Error submitting form. Please check RLS policies in Supabase.`);
                 } else {
                     alert('Success! Your message has been sent to LogSight.');
                     contactForm.reset();
@@ -995,7 +1033,6 @@
                 }
 
                 terminalOutput.appendChild(currentLineElement);
-                // Ensure scroll to bottom immediately
                 terminalOutput.scrollTop = terminalOutput.scrollHeight;
 
                 const spanElement = document.createElement('span');
@@ -1011,12 +1048,12 @@
                             terminalOutput.scrollTop = terminalOutput.scrollHeight;
                         }
                         // Set timeout for next line
-                        nextLineTimeout = setTimeout(typeLine, 100); 
+                        nextLineTimeout = setTimeout(typeLine, 100);
                     } else {
                         spanElement.textContent += lineText[charIndex];
                         charIndex++;
                     }
-                }, 20); 
+                }, 20);
             }
 
             function startTyping() {
@@ -1026,7 +1063,7 @@
                     typeCharInterval = null;
                 }
                 if (nextLineTimeout) {
-                    clearTimeout(nextLineTimeout); 
+                    clearTimeout(nextLineTimeout);
                     nextLineTimeout = null;
                 }
 
@@ -1043,18 +1080,18 @@
                     currentLines = scannerLines;
                     startTyping();
                     btnScanner.classList.add('bg-brand-blue', 'text-white');
-                    btnScanner.classList.remove('text-gray-300', 'hover:bg-gray-700'); 
+                    btnScanner.classList.remove('text-gray-300', 'hover:bg-gray-700');
                     btnMonitor.classList.remove('bg-brand-blue', 'text-white');
-                    btnMonitor.classList.add('text-gray-300', 'hover:bg-gray-700'); 
+                    btnMonitor.classList.add('text-gray-300', 'hover:bg-gray-700');
                 });
 
                 btnMonitor.addEventListener('click', () => {
                     currentLines = monitorLines;
                     startTyping();
                     btnMonitor.classList.add('bg-brand-blue', 'text-white');
-                    btnMonitor.classList.remove('text-gray-300', 'hover:bg-gray-700'); 
+                    btnMonitor.classList.remove('text-gray-300', 'hover:bg-gray-700');
                     btnScanner.classList.remove('bg-brand-blue', 'text-white');
-                    btnScanner.classList.add('text-gray-300', 'hover:bg-gray-700'); 
+                    btnScanner.classList.add('text-gray-300', 'hover:bg-gray-700');
                 });
             }
 
@@ -1070,7 +1107,7 @@
                         options: {
                             background: {
                                 color: {
-                                    value: "#0a192f" 
+                                    value: "#0a192f"
                                 }
                             },
                             fpsLimit: 60,
@@ -1078,31 +1115,31 @@
                                 events: {
                                     onHover: {
                                         enable: true,
-                                        mode: "repulse" 
+                                        mode: "repulse"
                                     }
                                 },
                                 modes: {
                                     repulse: {
-                                        distance: 100, 
+                                        distance: 100,
                                         duration: 0.4
                                     }
                                 }
                             },
                             particles: {
                                 color: {
-                                    value: "#ffffff" 
+                                    value: "#ffffff"
                                 },
-                                links: { 
+                                links: {
                                     enable: false
                                 },
                                 move: {
-                                    direction: "top", 
+                                    direction: "top",
                                     enable: true,
                                     outModes: {
-                                        default: "out" 
+                                        default: "out"
                                     },
                                     random: false,
-                                    speed: 0.3, 
+                                    speed: 0.3,
                                     straight: true
                                 },
                                 number: {
@@ -1110,10 +1147,10 @@
                                         enable: true,
                                         area: 800
                                     },
-                                    value: 150 
+                                    value: 150
                                 },
                                 opacity: {
-                                    value: { min: 0.3, max: 0.8 }, 
+                                    value: { min: 0.3, max: 0.8 },
                                     animation: {
                                         enable: true,
                                         speed: 1,
@@ -1124,7 +1161,7 @@
                                     type: "circle"
                                 },
                                 size: {
-                                    value: { min: 0.5, max: 2 } 
+                                    value: { min: 0.5, max: 2 }
                                 }
                             },
                             detectRetina: true
@@ -1184,8 +1221,8 @@
                     ease: "power1.inOut",
                     scrollTrigger: {
                         trigger: "#how-it-works",
-                        start: "top 60%", 
-                        end: "bottom 80%", 
+                        start: "top 60%",
+                        end: "bottom 80%",
                         scrub: 1.5
                     }
                 });
@@ -1199,7 +1236,7 @@
                 duration: 0.8,
                 ease: 'power3.out',
                 scrollTrigger: {
-                    trigger: "#how-it-works .container", 
+                    trigger: "#how-it-works .container",
                     start: "top 75%"
                 }
             });
@@ -1222,6 +1259,9 @@
             // 7. Active Nav Link Highlighting (GSAP version)
             const sections = gsap.utils.toArray('section[id]');
             const navLinks = gsap.utils.toArray('.nav-link[href^="#"]');
+            const aiLink = document.querySelector('.nav-link[href="/ai"]'); 
+            const ctaLink = document.querySelector('.nav-link[href="#cta"]');
+
 
             sections.forEach(section => {
                 ScrollTrigger.create({
@@ -1233,8 +1273,10 @@
                         const correspondingLink = document.querySelector(`.nav-link[href="#${id}"]`);
 
                         if (self.isActive) {
+                            // Clear all active classes
                             navLinks.forEach(link => link.classList.remove('active'));
-                            
+                            aiLink.classList.remove('active');
+
                             if (correspondingLink) {
                                 correspondingLink.classList.add('active');
                             }
@@ -1242,6 +1284,24 @@
                     }
                 });
             });
+
+            // Handle root link to ensure no 'active' class on AI link when on root page
+            if(window.location.pathname === '/') {
+                if(aiLink) aiLink.classList.remove('active');
+            }
+            
+            // Handle CTA link scroll-to
+            if (ctaLink) {
+                ctaLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.getElementById('cta').scrollIntoView({ behavior: 'smooth' });
+                    // Close menu if open
+                    if (mobileMenu.classList.contains('menu-active')) {
+                        toggleMobileMenu();
+                    }
+                });
+            }
+
 
         }); // End DOMContentLoaded
     </script>
