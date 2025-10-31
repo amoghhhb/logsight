@@ -2,14 +2,11 @@
   "name": "logsight-summarizer",
   "version": "1.0.0",
   "description": "AI-Powered Log Summarizer (Vercel Node.js)", 
-  // Make sure this line is followed by a comma if another property follows.
   "main": "Website/api/summarize.js", 
   "scripts": {
     "start": "node Website/api/summarize.js"
   },
   "dependencies": {
     "openai": "^4.0.0" 
-    // The LAST property in the block does NOT need a comma.
   }
-  // No comma after the last block.
 }
