@@ -1,14 +1,18 @@
 {
   "functions": {
     "Website/api/summarize.js": {
-      // This is the required format: builder-name@version
       "runtime": "@vercel/node@20.x" 
+      // This is the correct, official format for Vercel Node.js functions
     }
-  },
+    // NO comma after the closing brace of the function definition
+  }, 
   "routes": [
     {
       "src": "/api/(.*)",
       "dest": "Website/api/summarize.js"
+      // NO comma after the closing brace of the route definition
     }
+    // NO comma after the closing brace of the routes array
   ]
 }
+// NO trailing comma or characters outside the final closing brace
