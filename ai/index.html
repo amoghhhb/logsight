@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -69,7 +72,7 @@
             border-bottom: 1px solid rgba(59, 130, 246, 0.2);
             position: sticky;
             /* Z-index must be higher than the overlay (1000) */
-            z-index: 1001; 
+            z-index: 1001;
         }
 
         /* Ensure main content and footer sit above particles */
@@ -159,26 +162,30 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5); /* Slightly dark overlay */
-            backdrop-filter: blur(8px); /* Blur the content underneath */
+            background-color: rgba(0, 0, 0, 0.5);
+            /* Slightly dark overlay */
+            backdrop-filter: blur(8px);
+            /* Blur the content underneath */
             -webkit-backdrop-filter: blur(8px);
-            z-index: 1000; /* Ensure it's on top of most content */
+            z-index: 1000;
+            /* Ensure it's on top of most content */
             display: flex;
             justify-content: center;
             align-items: center;
             text-align: center;
             /* Allow clicks to pass through the overlay (but not the text inside) */
-            pointer-events: none; 
+            pointer-events: none;
         }
-        
+
         #coming-soon-text {
             /* Text style */
-            color: #facc15; /* brand-yellow */
+            color: #facc15;
+            /* brand-yellow */
             font-size: 4rem;
             font-weight: 900;
             text-shadow: 0 0 20px rgba(250, 204, 21, 0.8);
             /* This is the only part of the overlay that should block clicks */
-            pointer-events: all; 
+            pointer-events: all;
         }
     </style>
 </head>
@@ -294,9 +301,9 @@
                         <h5 class="font-semibold text-gray-300 mb-3">Legal</h5>
                         <ul class="space-y-2">
                             <li><a href="#" class="text-gray-400 hover:text-brand-yellow transition-colors">Privacy
-                                        Policy</a></li>
+                                    Policy</a></li>
                             <li><a href="#" class="text-gray-400 hover:text-brand-yellow transition-colors">Terms of
-                                        Service</a></li>
+                                    Service</a></li>
                         </ul>
                     </div>
                 </div>
