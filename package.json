@@ -1,0 +1,13 @@
+{
+  "name": "logsight-summarizer",
+  "version": "1.0.0",
+  "description": "AI-Powered Log Summarizer",
+  "main": "Website/api/summarize.js",
+  "scripts": {
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "openai": "^4.0.0"  
+    // Make sure this line exists!
+  }
+}
