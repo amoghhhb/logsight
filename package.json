@@ -2,17 +2,14 @@
   "name": "logsight-summarizer",
   "version": "1.0.0",
   "description": "AI-Powered Log Summarizer (Vercel Node.js)", 
-  "main": "Website/api/summarize.js", 
-  "scripts": {
+  "main": "Website/api/summarize.js", // <-- Property
+  "scripts": { // <-- Property
     "start": "node Website/api/summarize.js"
-  }, // <--- 🚨 ERROR SPOT 1: This closing brace MUST be followed by a comma (,)
-     //      because "dependencies" follows it.
-  "dependencies": { 
+  }, // <-- THIS MUST BE FOLLOWED BY A COMMA (,)
+  "dependencies": { // <-- This key MUST be surrounded by DOUBLE QUOTES
     "@google/genai": "^0.15.0"
-  }, // <--- 🚨 ERROR SPOT 2: This closing brace MUST be followed by a comma (,)
-     //      because "engines" follows it.
-  "engines": {
+  }, // <-- THIS MUST BE FOLLOWED BY A COMMA (,)
+  "engines": { // <-- This key MUST be surrounded by DOUBLE QUOTES
     "node": "20.x"
   }
 }
-// NO characters, spaces, or commas are allowed after the last closing brace.
