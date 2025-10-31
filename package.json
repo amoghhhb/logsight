@@ -2,17 +2,14 @@
   "name": "logsight-summarizer",
   "version": "1.0.0",
   "description": "AI-Powered Log Summarizer (Vercel Node.js)", 
-  "main": "Website/api/summarize.js", // <-- MUST HAVE a comma here
+  "main": "Website/api/summarize.js", 
   "scripts": {
-    "start": "node Website/api/summarize.js"
-  }, // <-- MUST HAVE a comma here
+    "start": "node Website/api/summarize.js" // <-- Check quotes here
+  }, // <-- Comma is required here
   "dependencies": {
     "@google/genai": "^0.15.0"
-    // NO comma here, because it's the last property in this block.
   }, 
   "engines": {
     "node": "20.x"
-    // NO comma here, because it's the last property in the entire file.
   }
-} 
-// NO comma before the final closing brace.
+}
