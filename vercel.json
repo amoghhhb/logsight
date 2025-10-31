@@ -1,7 +1,9 @@
 {
   "functions": {
     "api/summarize.js": {
-      "runtime": "nodejs20.x"
+      // Use the clean, officially supported version syntax
+      "runtime": "nodejs20.x" 
+      // Vercel validates this as a runtime version string.
     }
   },
   "routes": [
