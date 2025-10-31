@@ -1,7 +1,9 @@
 {
   "functions": {
     "Website/api/summarize.js": {
-      "runtime": "@vercel/node@20.x"
+      // Use the clean Vercel Node.js syntax
+      "runtime": "nodejs20.x" 
+      // This is the Vercel-preferred standard when specifying a version.
     }
   },
   "routes": [
