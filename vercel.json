@@ -2,14 +2,12 @@
   "functions": {
     "Website/api/summarize.js": {
       "runtime": "@vercel/node@20.x"
-      // NO comma here, because this is the last function defined.
     }
   },
   "routes": [
     {
       "src": "/api/(.*)",
       "dest": "Website/api/summarize.js"
-      // NO comma here, because this is the last route defined.
     }
   ]
 }
