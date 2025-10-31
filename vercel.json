@@ -1,14 +1,15 @@
 {
   "functions": {
     "Website/api/summarize.js": {
-      // Use the builder name with a version
-      "runtime": "@vercel/node@20.x" 
+      "runtime": "@vercel/node@20.x"
+      // NO comma here, because this is the last function defined.
     }
   },
   "routes": [
     {
       "src": "/api/(.*)",
       "dest": "Website/api/summarize.js"
+      // NO comma here, because this is the last route defined.
     }
   ]
 }
