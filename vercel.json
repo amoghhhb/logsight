@@ -1,7 +1,8 @@
 {
   "functions": {
     "Website/api/summarize.js": {
-      "runtime": "@vercel/node@20.x"
+      // This is the required format: builder-name@version
+      "runtime": "@vercel/node@20.x" 
     }
   },
   "routes": [
