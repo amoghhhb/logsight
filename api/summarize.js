@@ -1,62 +1,57 @@
 // File Location: Website/api/summarize.js
-// This code runs on the Vercel server and securely uses your DEEPSEEK_API_KEY.
+
+import { GoogleGenAI } from '@google/genai';
+
+// Initialize the Gemini client. It automatically looks for the 
+// GEMINI_API_KEY environment variable set in Vercel.
+const ai = new GoogleGenAI({}); 
 
 export default async function handler(request, response) {
-    // 1. Enforce POST requests
+    // 1. Method Check
     if (request.method !== 'POST') {
         return response.status(405).send('Method Not Allowed');
     }
 
-    // 2. Get the prompts from the frontend request (from ai.html)
+    // 2. Extract Data
     const { systemPrompt, userQuery } = request.body;
 
-    // 3. SECURELY retrieve the API key from Vercel's Environment Variables
-    const apiKey = process.env.DEEPSEEK_API_KEY;
-
-    if (!apiKey) {
-        console.error("DEEPSEEK_API_KEY environment variable is not set.");
-        return response.status(500).send('Server configuration error: AI service key missing.');
+    // 3. Environment Check (Crucial for Vercel secrets)
+    if (!process.env.GEMINI_API_KEY) {
+        console.error("GEMINI_API_KEY environment variable is not set.");
+        return response.status(500).send('Server configuration error: Gemini service key missing.');
     }
 
-    // 4. Prepare the payload for DeepSeek
-    const deepSeekPayload = {
-        model: "deepseek-chat", // DeepSeek model identifier
-        messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userQuery }
-        ]
-    };
+    // 4. Model Selection (Free and fast model)
+    const model = 'gemini-2.5-flash'; 
 
-    // 5. Call the real DeepSeek API using the secret key
     try {
-        const deepSeekResponse = await fetch("https://api.deepseek.com/chat/completions", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                // This Authorization header is the only place the API key is used
-                'Authorization': `Bearer ${apiKey}` 
-            },
-            body: JSON.stringify(deepSeekPayload)
+        // 5. Execute API Call
+        const geminiResponse = await ai.models.generateContent({
+            model: model,
+            contents: [
+                // Gemini separates the user query from the system instruction (context)
+                { role: "user", parts: [{ text: userQuery }] }
+            ],
+            config: {
+                systemInstruction: systemPrompt, // Sets the expert role for the AI
+                temperature: 0.1, // Low temperature for factual summarization
+            }
         });
 
-        if (!deepSeekResponse.ok) {
-            const errorBody = await deepSeekResponse.text();
-            console.error("DeepSeek API Error:", errorBody);
-            // Pass the error status/message back to your frontend
-            return response.status(deepSeekResponse.status).send('Error from AI provider. Check Vercel logs for API key or usage issues.');
-        }
+        const aiResponseText = geminiResponse.text.trim();
 
-        const result = await deepSeekResponse.json();
-        
-        if (result.choices && result.choices[0].message && result.choices[0].message.content) {
-            // 6. Send the AI's text response *back* to your frontend (ai.html)
-            response.status(200).send(result.choices[0].message.content);
+        if (aiResponseText) {
+            // 6. Success: Send the AI response back to the frontend
+            response.status(200).send(aiResponseText);
         } else {
-            response.status(500).send('Invalid response structure from AI');
+            response.status(500).send('The AI returned an empty response.');
         }
 
     } catch (error) {
-        console.error("Internal Server Error:", error);
-        response.status(500).send('Error processing your request on the server.');
+        // 7. Error Handling
+        console.error("Gemini API Call Error:", error);
+        
+        const errorMessage = error.message || 'An unknown error occurred during the AI request.';
+        response.status(400).send(`AI Service Error: ${errorMessage}`);
     }
 }
