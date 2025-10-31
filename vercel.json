@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "Website/api/summarize.js": {
+      "runtime": "node"
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "Website/api/summarize.js"
+    }
+  ]
+}
