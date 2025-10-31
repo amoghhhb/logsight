@@ -1,5 +1,11 @@
 // File Location: Website/api/summarize.js
-// This code runs on the Vercel server and securely uses your OPENROUTER_API_KEY.
+// This code runs on the Vercel server and securely uses your OPENAI_API_KEY.
+
+import OpenAI from 'openai';
+
+// Initialize the OpenAI client using the key from Vercel's environment variables
+// The SDK automatically looks for the OPENAI_API_KEY variable.
+const openai = new OpenAI({});
 
 export default async function handler(request, response) {
     // 1. Enforce POST requests
@@ -10,72 +16,43 @@ export default async function handler(request, response) {
     // 2. Get the prompts from the frontend request (from ai.html)
     const { systemPrompt, userQuery } = request.body;
 
-    // 3. SECURELY retrieve the API key from Vercel's Environment Variables
-    const apiKey = process.env.OPENROUTER_API_KEY; 
-    
-    if (!apiKey) {
-        console.error("OPENROUTER_API_KEY environment variable is not set.");
-        return response.status(500).send('Server configuration error: AI service key missing.');
+    // 3. Environment check
+    if (!process.env.OPENAI_API_KEY) {
+        console.error("OPENAI_API_KEY environment variable is not set.");
+        return response.status(500).send('Server configuration error: OpenAI service key missing.');
     }
 
-    // 4. Prepare the payload for OpenRouter
-    const openRouterPayload = {
-        
-        // CRITICAL FIX: The 'model' field MUST be a single string for the primary model.
-        // We set the highest priority model as the single string.
-        model: "deepseek/deepseek-r1:free", 
-        
-        messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userQuery }
-        ],
-        
-        // The list of fallbacks and headers are wrapped inside 'extra_body'
-        // This is the correct way to pass multiple models for fallback/routing on OpenRouter.
-        extra_body: {
-            "models": [ // OpenRouter will try these in order if the primary model fails
-                "deepseek/deepseek-r1:free", 
-                "meta-llama/llama-3-8b-instruct:free", 
-                "mistralai/mistral-7b-instruct:free"
-            ],
-            // Recommended OpenRouter headers for site attribution
-            "X-Title": "LogSight AI Summarizer",
-            "HTTP-Referer": "https://logsight.vercel.app" 
-        }
-    };
+    // 4. Set the low-cost model
+    const model = 'gpt-3.5-turbo';
 
-    // 5. Call the OpenRouter API using the secret key
     try {
-        const openRouterResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                // OpenRouter uses the Bearer token standard
-                'Authorization': `Bearer ${apiKey}` 
-            },
-            body: JSON.stringify(openRouterPayload)
+        // 5. Call the OpenAI API
+        const completion = await openai.chat.completions.create({
+            model: model,
+            messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: userQuery }
+            ],
+            temperature: 0.1, // Keep it low for factual log summarization
         });
 
-        if (!openRouterResponse.ok) {
-            const errorBody = await openRouterResponse.json();
-            console.error("OpenRouter API Error:", errorBody);
-            
-            // Pass a concise error message from the API back to the frontend
-            const errorMessage = errorBody.error && errorBody.error.message ? errorBody.error.message : 'Error from AI provider.';
-            return response.status(openRouterResponse.status).send(errorMessage);
-        }
+        const aiResponseText = completion.choices[0]?.message?.content?.trim();
 
-        const result = await openRouterResponse.json();
-        
-        if (result.choices && result.choices[0].message && result.choices[0].message.content) {
+        if (aiResponseText) {
             // 6. Send the AI's text response *back* to your frontend (ai.html)
-            response.status(200).send(result.choices[0].message.content);
+            response.status(200).send(aiResponseText);
         } else {
-            response.status(500).send('Invalid response structure from AI.');
+            response.status(500).send('The AI returned an empty or invalid response.');
         }
 
     } catch (error) {
-        console.error("Internal Server Error:", error);
-        response.status(500).send('Error processing your request on the server.');
+        // Log the full error for debugging
+        console.error("OpenAI API Call Error:", error);
+        
+        // Return a user-friendly error to the frontend
+        const errorMessage = error.message || 'An unknown error occurred during the AI request.';
+        
+        // Use 400 for client-side issues like invalid requests, or 500 for general server errors
+        response.status(400).send(`AI Service Error: ${errorMessage}`);
     }
 }
