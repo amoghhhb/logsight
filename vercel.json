@@ -1,0 +1,25 @@
+{
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/index",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/ai",
+      "destination": "/ai.html"
+    },
+    {
+      "source": "/api/summarize",
+      "destination": "/api/summarize.js"
+    }
+  ],
+  "functions": {
+    "api/summarize.js": {
+      "runtime": "nodejs18.x"
+    }
+  }
+}
