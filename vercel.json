@@ -1,9 +1,7 @@
 {
   "functions": {
     "api/summarize.js": {
-      // Using the stable, officially supported builder and major version
-      "runtime": "@vercel/node@18.x" 
-      // Note: Node 18.x is often more compatible than 20.x for this explicit syntax.
+      "runtime": "nodejs20.x"
     }
   },
   "routes": [
