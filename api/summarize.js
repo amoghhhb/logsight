@@ -1,54 +1,64 @@
 // File Location: api/summarize.js
 
-import OpenAI from 'openai';
-
-// NOTE: This requires the 'openai' package to be installed and Vercel to find it.
-// It also requires the OPENAI_API_KEY environment variable.
-
-const openai = new OpenAI({});
+// NOTE: This file uses native Node.js 'fetch' and does NOT require package.json.
 
 export default async function handler(request, response) {
-    // 1. Method Check
+    // 1. Enforce POST requests
     if (request.method !== 'POST') {
         return response.status(405).send('Method Not Allowed');
     }
 
-    // 2. Get Data
-    const { systemPrompt, userQuery } = request.body;
+    // 2. Get Data and API Key
+    const { systemPrompt, userQuery } = await request.json(); // Use request.json() to parse body
 
-    // 3. Environment Check
-    if (!process.env.OPENAI_API_KEY) {
-        console.error("OPENAI_API_KEY environment variable is not set.");
-        return response.status(500).send('Server configuration error: OpenAI service key missing.');
+    const apiKey = process.env.OPENAI_API_KEY;
+
+    if (!apiKey) {
+        return response.status(500).send('Server configuration error: OPENAI_API_KEY is missing.');
     }
 
-    const model = 'gpt-3.5-turbo'; // Low-cost, high-performance model
+    // 3. Prepare Payload for OpenAI
+    const openAiPayload = {
+        model: 'gpt-3.5-turbo',
+        messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userQuery }
+        ],
+        temperature: 0.1,
+    };
 
     try {
-        // 4. Call OpenAI API
-        const completion = await openai.chat.completions.create({
-            model: model,
-            messages: [
-                { role: "system", content: systemPrompt },
-                { role: "user", content: userQuery }
-            ],
-            temperature: 0.1, 
+        // 4. Call OpenAI API using native fetch()
+        const openAiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                // Authorization is the most critical part
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify(openAiPayload)
         });
 
-        const aiResponseText = completion.choices[0]?.message?.content?.trim();
+        // 5. Handle Errors (e.g., 401, 429) from OpenAI
+        if (!openAiResponse.ok) {
+            const errorText = await openAiResponse.text();
+            console.error("OpenAI API Error:", errorText);
+            return response.status(openAiResponse.status).send(`AI Service Error: ${errorText}`);
+        }
+
+        const result = await openAiResponse.json();
+        
+        const aiResponseText = result.choices[0]?.message?.content?.trim();
 
         if (aiResponseText) {
-            // 5. Send response
+            // 6. Success: Send the AI response back
             response.status(200).send(aiResponseText);
         } else {
             response.status(500).send('The AI returned an empty response.');
         }
 
     } catch (error) {
-        console.error("OpenAI API Call Error:", error);
-        
-        // This is where the 429 quota error will be caught if your billing is not fixed.
-        const errorMessage = error.message || 'An unknown error occurred during the AI request.';
-        response.status(400).send(`AI Service Error: ${errorMessage}`);
+        console.error("Network Error:", error);
+        response.status(500).send(`Internal Server Error: ${error.message}`);
     }
 }
