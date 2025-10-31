@@ -1,13 +1,13 @@
 {
   "functions": {
-    "Website/api/summarize.js": {
+    "api/summarize.js": { // <--- FIXED PATH
       "runtime": "nodejs20.x"
     }
   },
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "Website/api/summarize.js"
+      "dest": "api/summarize.js" // <--- FIXED PATH
     }
   ]
 }
