@@ -1,8 +1,7 @@
 {
   "functions": {
     "api/summarize.js": {
-      // Using the builder package syntax Vercel is looking for
-      "runtime": "@vercel/node@2" 
+      "runtime": "@vercel/node@2"
     }
   },
   "routes": [
